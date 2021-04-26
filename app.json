@@ -1,15 +1,15 @@
 {
-    "name": "slam-mirrorbot ",
-    "description": "A Telegram bot for all your mirror needs",
-    "logo": "https://telegra.ph/file/6507910fd06d18dfaba82.jpg",
+    "name": "Eunha ",
+    "description": "Telegram mirror bot with python",
+    "logo": "https://telegra.ph/file/39a1878efeeb15b15633c.jpg",
     "keywords": [
       "bot",
       "telegram",
       "python"
     ],
-    "repository": "https://github.com/breakdowns/slam-mirrorbot",
-    "website": "https://t.me/SlamMirrorSupport",
-    "success_url": "https://github.com/breakdowns/slam-mirrorbot/blob/master/README.md",
+    "repository": "https://github.com/vincreator/eunha",
+    "website": "",
+    "success_url": "https://github.com/vincreator/eunha/master/README.md",
     "stack": "container",
     "env": {
       "ENV": {

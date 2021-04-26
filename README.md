@@ -1,6 +1,6 @@
-[![Slam](https://telegra.ph/file/db03910496f06094f1f7a.jpg)](https://youtu.be/Pk_TthHfLeE)
+[![Betterme](https://telegra.ph/file/044017033ca7028c9fc85.jpg)](https://youtu.be/s2TktuIA9-s)
 
-# Slam Mirror Bot
+# Eunha Mirror Bot
 This is a telegram bot writen in python for mirroring files on the internet to our beloved Google Drive.
 
 # Features supported:
@@ -17,6 +17,7 @@ This is a telegram bot writen in python for mirroring files on the internet to o
 ## From Source Repos
 - Mirroring direct download links, Torrent, and Telegram files to Google Drive
 - Mirroring Mega.nz links to Google Drive (In development stage)
+- Mirroring Uptobox.com links to Google Drive (Uptobox account must be premium)
 - Copy files from someone's drive to your drive (Using Autorclone)
 - Download/upload progress, speeds and ETAs
 - Mirror all youtube-dl supported links
@@ -40,30 +41,24 @@ NTFS, RPM, SquashFS, UDF, VHD, XAR, Z.
 
 # How to deploy?
 Deploying is pretty much straight forward and is divided into several steps as follows:
+
 ## Installing requirements
 
 - Clone this repo:
 ```
-git clone https://github.com/breakdowns/slam-mirrorbot mirrorbot/
-cd mirrorbot
+git clone https://github.com/vincreator/eunha/ eunha
+cd eunha
 ```
 
 - Install requirements
 For Debian based distros
 ```
 sudo apt install python3
+sudo snap install docker 
 ```
-Install Docker by following the [official docker docs](https://docs.docker.com/engine/install/debian/)
-
-
 - For Arch and it's derivatives:
 ```
 sudo pacman -S docker python
-```
-
-- Install dependencies for running setup scripts:
-```
-pip3 install -r requirements-cli.txt
 ```
 
 ## Setting up config file
@@ -102,14 +97,18 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - **SHORTENER_API**: Fill your shortener api key if you are using shortener.
 - **SHORTENER**: (Optional field) if you want to use shortener in Gdrive and index link, fill shotener url here. Examples:
 ```
-exe.io
-gplinks.in
-shrinkme.io
-urlshortx.com
-shortzon.com
+> exe.io
+
+> gplinks.in
+
+> shrinkme.io
+
+> urlshortx.com
+
+> shortzon.com
 ```
 
-**Note**: Above are the supported url shorteners. Except these only some url shorteners are supported.
+**Note**: Above are the supported url shorteners. Except these only some url shorteners are supported. **Note**: Above are the supported url shorteners. Except these only some url shorteners are supported.
 
 </details>
 
@@ -118,7 +117,7 @@ shortzon.com
 - Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
 - Go to the OAuth Consent tab, fill it, and save.
 - Go to the Credentials tab and click Create Credentials -> OAuth Client ID
-- Choose Other and Create.
+- Choose Desktop and Create.
 - Use the download button to download your credentials.
 - Move that file to the root of mirrorbot, and rename it to credentials.json
 - Visit [Google API page](https://console.developers.google.com/apis/library)
@@ -172,17 +171,30 @@ heroku git:remote -a appname
 ```
 heroku stack:set container -a appname
 ```
-- Add Private Credentials and Config Stuff:
+- Clone this repo:
 ```
-git add -f credentials.json token.pickle config.env heroku.yml
+git clone https://github.com/vincreator/eunha
+ls
+cd eunha
+```
+- Init the repo clone
+```
+git init
+```
+- Add all stuff:
+```
+git add * -f
+git add .gitignore
+git add .gitmodules
+git add .netrc
 ```
 - Commit new changes:
 ```
-git commit -m "Added Creds."
+git commit -m "Eunha Mirror"
 ```
 - Push Code to Heroku:
 ```
-git push heroku master --force
+git push heroku master
 ```
 - Restart Worker by these commands,You can Do it manually too in heroku.
 - For Turning off the Bot:
@@ -199,9 +211,9 @@ heroku ps:scale worker=1 -a appname
 ## Bot commands to be set in [@BotFather](https://t.me/BotFather)
 
 ```
-mirror - Start Mirroring
+seed - Start Mirroring
 tarmirror - Upload tar (zipped) file
-unzipmirror - Extract files
+unpack - Extract files 
 clone - copy file/folder to drive
 watch - mirror YT-DL support link
 tarwatch - mirror youtube playlist link as tar
@@ -212,9 +224,14 @@ list - [query] searches files in G-Drive
 status - Get Mirror Status message
 stats - Bot Usage Stats
 help - Get Detailed Help
+tshelp - torrent search
+weebhelp - weebo info
+stickerhelp - sticker info etc
 speedtest - Check Speed of the host
+restart - restart the bot [owner only]
+usage - check dyno [owner only]
 log - Bot Log [owner only]
-repo - Get the bot repo
+owner - see my master
 ```
 
 ## Using service accounts for uploading to avoid user rate limit
@@ -247,14 +264,14 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
 
 ## Youtube-dl authentication using .netrc file
-For using your premium accounts in youtube-dl, edit the [.netrc](https://github.com/breakdowns/slam-mirrorbot/blob/master/.netrc) file according to following format:
+For using your premium accounts in youtube-dl, edit the [.netrc](https://github.com/vincreator/eunha/blob/master/.netrc) file according to following format:
 ```
 machine host login username password my_youtube_password
 ```
 where host is the name of extractor (eg. youtube, twitch). Multiple accounts of different hosts can be added each separated by a new line
 
 # Support Group
-<p><a href="https://t.me/SlamMirrorSupport"> <img src="https://img.shields.io/badge/Slam%20Mirror%20Support-black?style=for-the-badge&logo=telegram" width="230""/></a></p>
+<p><a href="https://t.me/EunhaMirrorRoom"> <img src="https://img.shields.io/badge/Eunha%20Mirror%20Room-black?style=for-the-badge&logo=telegram" width="230""/></a></p>
 
 # Credits
 
@@ -263,6 +280,11 @@ Thanks to:
 - [Izzy12](https://github.com/lzzy12/) for original repo
 - [Dank-del](https://github.com/Dank-del/) for base repo
 - [magneto261290](https://github.com/magneto261290/) for some features
-- [SVR666](https://github.com/SVR666/) for some features & fixes
+- [SVR666](https://github.com/SVR666/) for some fixes
+- [4amparaboy](https://github.com/4amparaboy/) for some help
+- [WinTenDev](https://github.com/WinTenDev/) for Uptobox support
+- [iamLiquidX](https://github.com/iamLiquidX/) for Speedtest module
+- [ydner](https://github.com/ydner/) for Usage module
+- [breakdowns](https://github.com/breakdowns) idk
 
-and many more people who aren't mentioned here, but may be found in [Contributors](https://github.com/breakdowns/slam-mirrorbot/graphs/contributors).
+and many more people who aren't mentioned here, but may be found in [Contributors](https://github.com/vincreator/eunha/graphs/contributors).

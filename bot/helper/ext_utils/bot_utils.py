@@ -17,8 +17,8 @@ class MirrorStatus:
     STATUS_UPLOADING = "Uploading...📤"
     STATUS_DOWNLOADING = "Downloading...📥"
     STATUS_WAITING = "Queued...📝"
-    STATUS_FAILED = "Failed 🚫. Cleaning Download..."
-    STATUS_CANCELLED = "Cancelled ❌. Cleaning Download..."
+    STATUS_FAILED = "Failed 🚫. Cleaning download"
+    STATUS_CANCELLED = "Cancelled...❌"
     STATUS_ARCHIVING = "Archiving...🔐"
     STATUS_EXTRACTING = "Extracting...📂"
 
@@ -109,7 +109,7 @@ def get_readable_message():
                 except:
                     pass
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
-                msg += f"\n<b>To Stop:</b> <code>/{BotCommands.CancelMirror} {download.gid()}</code>"
+                msg += f"\n<b>GID:</b> <code>{download.gid()}</code>"
             msg += "\n\n"
         return msg
 

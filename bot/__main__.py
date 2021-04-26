@@ -43,7 +43,7 @@ def stats(update, context):
             f'<b>CPU:</b> {cpuUsage}%\n' \
             f'<b>RAM:</b> {memory}%\n' \
             f'<b>Disk:</b> {disk}%'
-    update.effective_message.reply_photo("https://telegra.ph/file/db03910496f06094f1f7a.jpg", stats, parse_mode=ParseMode.HTML)
+    update.effective_message.reply_photo("https://telegra.ph/file/044017033ca7028c9fc85.jpg", stats, parse_mode=ParseMode.HTML)
 
 
 @run_async
@@ -52,7 +52,7 @@ def start(update, context):
 This bot can mirror all your links to Google drive!
 Type /{BotCommands.HelpCommand} to get a list of available commands
 '''
-    update.effective_message.reply_photo("https://telegra.ph/file/db03910496f06094f1f7a.jpg", start_string, parse_mode=ParseMode.MARKDOWN)
+    update.effective_message.reply_photo("https://telegra.ph/file/044017033ca7028c9fc85.jpg", start_string, parse_mode=ParseMode.MARKDOWN)
 
 @run_async
 def chat_list(update, context):
@@ -62,10 +62,10 @@ def chat_list(update, context):
 
 
 @run_async
-def repo(update, context):
+def owner(update, context):
     bot.send_message(update.message.chat_id,
     reply_to_message_id=update.message.message_id,
-    text="Repo: https://github.com/breakdowns/slam-mirrorbot\nGroup: https://t.me/SlamMirrorSupport", disable_web_page_preview=True)
+    text="Owner: https://t.me/oViNc", disable_web_page_preview=True)
 
 
 @run_async
@@ -127,7 +127,7 @@ def bot_help(update, context):
 
 /{BotCommands.SpeedCommand}: Check Internet Speed of the Host
 
-/{BotCommands.RepoCommand}: Get the bot repo.
+/{BotCommands.OwnerCommand}: Check Who is My master.
 
 /tshelp: Get help for torrent search module.
 
@@ -159,7 +159,7 @@ def main():
     stats_handler = CommandHandler(BotCommands.StatsCommand,
                                    stats, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter)
-    repo_handler = CommandHandler(BotCommands.RepoCommand, repo,
+    owner_handler = CommandHandler(BotCommands.OwnerCommand, owner,
                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     authlist_handler = CommandHandler(BotCommands.AuthListCommand, chat_list, filters=CustomFilters.owner_filter)
     dispatcher.add_handler(start_handler)
@@ -168,7 +168,7 @@ def main():
     dispatcher.add_handler(help_handler)
     dispatcher.add_handler(stats_handler)
     dispatcher.add_handler(log_handler)
-    dispatcher.add_handler(repo_handler)
+    dispatcher.add_handler(owner_handler)
     dispatcher.add_handler(authlist_handler)
     updater.start_polling()
     LOGGER.info("Bot Started!")
