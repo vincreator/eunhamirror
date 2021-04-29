@@ -5,7 +5,7 @@ import aiohttp
 import feedparser
 from telegram.ext import run_async, CommandHandler
 from telegram import ParseMode
-from bot import dispatcher
+from bot import dispatcher, IMAGE_URL
 from urllib.parse import quote as urlencode, urlsplit
 from pyrogram import Client, filters
 from pyrogram.parser import html as pyrogram_html
@@ -145,7 +145,7 @@ def searchhelp(update, context):
 • /sts <i>[search query]</i>
 • /sukebei <i>[search query]</i>
 '''
-    update.effective_message.reply_photo("https://telegra.ph/file/044017033ca7028c9fc85.jpg", help_string, parse_mode=ParseMode.HTML)
+    update.effective_message.reply_photo(IMAGE_URL, help_string, parse_mode=ParseMode.HTML)
     
     
 SEARCHHELP_HANDLER = CommandHandler("tshelp", searchhelp)
