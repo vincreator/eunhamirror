@@ -20,7 +20,6 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clon
 
 now=datetime.now(pytz.timezone('Asia/Jakarta'))
 
-
 @run_async
 def stats(update, context):
     currentTime = get_readable_time((time.time() - botStartTime))
@@ -40,15 +39,11 @@ def stats(update, context):
             f'<b>Used:</b> {used}  ' \
             f'<b>Free:</b> {free}\n\n' \
             f'📊Data Usage📊\n<b>Upload:</b> {sent}\n' \
-            f'<b>Down:</b> {recv}\n\n' \
+            f'<b>Download:</b> {recv}\n\n' \
             f'<b>CPU:</b> {cpuUsage}%\n' \
             f'<b>RAM:</b> {memory}%\n' \
-            f'<b>Disk:</b> {disk}%'
-<<<<<<< HEAD
-    update.effective_message.reply_photo("https://telegra.ph/file/044017033ca7028c9fc85.jpg", stats, parse_mode=ParseMode.HTML)
-=======
+            f'<b>DISK:</b> {disk}%'
     update.effective_message.reply_photo(IMAGE_URL, stats, parse_mode=ParseMode.HTML)
->>>>>>> 289a427 (Add var for custom image (#56))
 
 
 @run_async
@@ -57,11 +52,7 @@ def start(update, context):
 This bot can mirror all your links to Google drive!
 Type /{BotCommands.HelpCommand} to get a list of available commands
 '''
-<<<<<<< HEAD
-    update.effective_message.reply_photo("https://telegra.ph/file/044017033ca7028c9fc85.jpg", start_string, parse_mode=ParseMode.MARKDOWN)
-=======
     update.effective_message.reply_photo(IMAGE_URL, start_string, parse_mode=ParseMode.MARKDOWN)
->>>>>>> 289a427 (Add var for custom image (#56))
 
 
 @run_async
