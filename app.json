@@ -116,6 +116,10 @@
         "description": "Fill your shortener api key if you are using shortener.",
         "required": false
       },
+      "IMAGE_URL": {
+        "description": "Show Image/Logo in /start message, Use telegra.ph or any direct link image.",
+        "required": false
+      },
       "BUTTON_THREE_NAME": {
         "description": "Extra buttons (optional).",
         "required": false
