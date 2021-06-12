@@ -24,9 +24,12 @@ def cloneNode(update, context):
             smsg, button = gd.drive_list(name)
             if smsg:
                 deleteMessage(context.bot, msg1)
-                msg3 = "File/Folder is already available in Drive.\nHere are the search results:"
+                msg3 = "<b>File/Folder is already available in Drive</b>.\n<b>Here are the search results:</b>"
                 sendMarkup(msg3, context.bot, update, button)
                 return
+            else:
+                if CLONE_LIMIT is None:
+                    deleteMessage(context.bot, msg1)
         if CLONE_LIMIT is not None:
             limit = CLONE_LIMIT
             limit = limit.split(' ', maxsplit=1)
@@ -57,7 +60,7 @@ def cloneNode(update, context):
             else:
                 uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
             if uname is not None:
-                cc = f'\n\n#cc: {uname}'
+                cc = f'\n\ncc: {uname}'
             sendMarkup(result + cc, context.bot, update, button)
     else:
         sendMessage('Provide G-Drive Shareable Link to Clone.', context.bot, update)

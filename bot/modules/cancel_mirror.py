@@ -33,21 +33,21 @@ def cancel_mirror(update, context):
             if BotCommands.MirrorCommand in update.message.text or \
                BotCommands.TarMirrorCommand in update.message.text or \
                BotCommands.UnzipMirrorCommand in update.message.text:
-                msg = "Mirror Already Have Been Cancelled"
+                msg = "Mirror already have been cancelled"
                 sendMessage(msg, context.bot, update)
                 return
             else:
-                msg = f"Please reply to the <code>/{BotCommands.MirrorCommand}</code> message which was used to start the download or <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
+                msg = f"Please reply to the /{BotCommands.MirrorCommand} message which was used to start the download or /{BotCommands.CancelMirror} GID to cancel it!"
                 sendMessage(msg, context.bot, update)
                 return
     if dl.status() == "Uploading...📤":
-        sendMessage("Upload in Progress, You Can't Cancel It.", context.bot, update)
+        sendMessage("Upload in Progress, You Can't Cancel it.", context.bot, update)
         return
     elif dl.status() == "Archiving...🔐":
-        sendMessage("Archival in Progress, You Can't Cancel It.", context.bot, update)
+        sendMessage("Archival in Progress, You Can't Cancel it.", context.bot, update)
         return
     elif dl.status() == "Extracting...📂":
-        sendMessage("Extract in Progress, You Can't Cancel It.", context.bot, update)
+        sendMessage("Extract in Progress, You Can't Cancel it.", context.bot, update)
         return
     else:
         dl.download().cancel_download()
@@ -69,8 +69,8 @@ def cancel_all(update, context):
 
 
 cancel_mirror_handler = CommandHandler(BotCommands.CancelMirror, cancel_mirror,
-                                       filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user) & CustomFilters.mirror_owner_filter)
+                                       filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user) & CustomFilters.mirror_owner_filter | CustomFilters.sudo_user)
 cancel_all_handler = CommandHandler(BotCommands.CancelAllCommand, cancel_all,
-                                    filters=CustomFilters.owner_filter)
+                                    filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
 dispatcher.add_handler(cancel_all_handler)
 dispatcher.add_handler(cancel_mirror_handler)
