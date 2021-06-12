@@ -7,9 +7,9 @@
       "telegram",
       "python"
     ],
-    "repository": "https://github.com/breakdowns/slam-mirrorbot",
-    "website": "https://github.com/breakdowns/slam-mirrorbot",
-    "success_url": "https://t.me/SlamMirrorSupport",
+    "repository": "https://github.com/vincreator/eunha",
+    "website": "",
+    "success_url": "https://github.com/vincreator/eunha/master/README.md",
     "stack": "container",
     "env": {
       "ENV": {
@@ -175,11 +175,5 @@
       {
         "plan": "heroku-postgresql"
       }
-    ],
-    "formation": {
-            "worker": {
-                "quantity": 1,
-                "size": "free"
-            }
-      }
+    ]
 }

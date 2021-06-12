@@ -21,7 +21,7 @@ pybase64
 pyrogram
 python-dotenv
 python-magic
-python-telegram-bot
+python-telegram-bot==12.6.1
 pytz
 requests
 speedtest-cli
