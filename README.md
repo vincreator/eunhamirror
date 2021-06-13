@@ -70,7 +70,7 @@ Deploying is pretty much straight forward and is divided into several steps as f
 
 - Clone this repo:
 ```
-git clone https://github.com/breakdowns/slam-mirrorbot mirrorbot/
+git clone https://github.com/vincreator/eunha/
 cd mirrorbot
 ```
 
@@ -208,14 +208,11 @@ sudo docker run mirrorbot
 
 - Give stars and Fork this repo then upload **token.pickle** to your forks
 - Hit the **DEPLOY TO HEROKU** button and follow the further instructions in the screen
-- **NOTE**: If you didn't upload **token.pickle**, uploading will not work. How to generate **token.pickle**? [Read here](https://github.com/breakdowns/slam-mirrorbot#getting-google-oauth-api-credential-file)
+- **NOTE**: If you didn't upload **token.pickle**, uploading will not work. How to generate **token.pickle**? [Read here](https://github.com/vincreator/eunha#getting-google-oauth-api-credential-file)
 - Recommended to use 1 App in 1 Heroku accounts
 
 <p><a href="https://heroku.com/deploy"> <img src="https://img.shields.io/badge/Deploy%20To%20Heroku-blueviolet?style=for-the-badge&logo=heroku" width="200""/></a></p>
 
-<<<<<<< HEAD
-## Deploying on Heroku using heroku-cli
-=======
 ## Deploying on Heroku with heroku-cli and Goorm IDE
 <p><a href="https://telegra.ph/How-to-Deploy-a-Mirror-Bot-to-Heroku-with-CLI-05-06"> <img src="https://img.shields.io/badge/see%20on%20telegraph-grey?style=for-the-badge" width="190""/></a></p>
 
@@ -230,7 +227,7 @@ Many thanks to [AutoRClone](https://github.com/xyou365/AutoRclone) for the scrip
 **NOTE**: Using Service Accounts is only recommended while uploading to a Team Drive.
 
 ## Generate Service Accounts. [What is Service Account](https://cloud.google.com/iam/docs/service-accounts)
->>>>>>> 31c7246 (v4.8.5)
+
 <details>
     <summary><b>Click here for more details</b></summary>
 
@@ -284,6 +281,65 @@ heroku ps:scale worker=0 -a appname
 - For Turning on the Bot:
 ```
 heroku ps:scale worker=1 -a appname		
+```
+
+</details>
+
+# Using Service Accounts for uploading to avoid user rate limit
+For Service Account to work, you must set **USE_SERVICE_ACCOUNTS=**"True" in config file or environment variables, 
+Many thanks to [AutoRClone](https://github.com/xyou365/AutoRclone) for the scripts.
+**NOTE**: Using Service Accounts is only recommended while uploading to a Team Drive.
+
+## Generate Service Accounts. [What is Service Account](https://cloud.google.com/iam/docs/service-accounts)
+<details>
+    <summary><b>Click here for more details</b></summary>
+
+Let us create only the Service Accounts that we need. 
+**Warning**: abuse of this feature is not the aim of this project and we do **NOT** recommend that you make a lot of projects, just one project and 100 SAs allow you plenty of use, its also possible that over abuse might get your projects banned by Google. 
+
+**NOTE:** 1 Service Account can copy around 750gb a day, 1 project can make 100 Service Accounts so that's 75tb a day, for most users this should easily suffice.
+```
+python3 gen_sa_accounts.py --quick-setup 1 --new-only
+```
+A folder named accounts will be created which will contain keys for the Service Accounts.
+
+Or you can create Service Accounts to current project, no need to create new one
+
+- List your projects ids
+```
+python3 gen_sa_accounts.py --list-projects
+```
+- Enable services automatically by this command
+```
+python3 gen_sa_accounts.py --enable-services $PROJECTID
+```
+- Create Sevice Accounts to current project
+```
+python3 gen_sa_accounts.py --create-sas $PROJECTID
+```
+- Download Sevice Accounts as accounts folder
+```
+python3 gen_sa_accounts.py --download-keys $PROJECTID
+```
+If you want to add Service Accounts to Google Group, follow these steps
+
+- Mount accounts folder
+```
+cd accounts
+```
+- Grab emails form all accounts to emails.txt file that would be created in accounts folder
+```
+grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
+```
+- Unmount acounts folder
+```
+cd -
+```
+Then add emails from emails.txt to Google Group, after that add Google Group to your Shared Drive and promote it to manager.
+
+**NOTE**: If you have created SAs in past from this script, you can also just re download the keys by running:
+```
+python3 gen_sa_accounts.py --download-keys project_id
 ```
 
 </details>
