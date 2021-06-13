@@ -608,7 +608,7 @@ class GoogleDriveHelper:
 
             for content in self.telegraph_content :
                 self.path.append(Telegraph(access_token=telegraph_token).create_page(
-                                                        title = 'Eunha Bot Search',
+                                                        title = 'Eunha Search',
                                                         author_name='Eunha',
                                                         author_url='https://github.com/vincreator/eunha',
                                                         html_content=content
