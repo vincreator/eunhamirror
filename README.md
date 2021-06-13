@@ -1,19 +1,17 @@
 [![Betterme](https://telegra.ph/file/044017033ca7028c9fc85.jpg)](https://youtu.be/s2TktuIA9-s)
 
 # Eunha Mirror Bot
-This is a telegram bot writen in python for mirroring files on the internet to our beloved Google Drive.
-
-![GitHub Repo stars](https://img.shields.io/github/stars/breakdowns/slam-mirrorbot?color=blue&style=flat)
-![GitHub forks](https://img.shields.io/github/forks/breakdowns/slam-mirrorbot?color=green&style=flat)
-![GitHub issues](https://img.shields.io/github/issues/breakdowns/slam-mirrorbot)
-![GitHub closed issues](https://img.shields.io/github/issues-closed/breakdowns/slam-mirrorbot)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/breakdowns/slam-mirrorbot)
-![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/breakdowns/slam-mirrorbot)
-![GitHub contributors](https://img.shields.io/github/contributors/breakdowns/slam-mirrorbot?style=flat)
-![GitHub repo size](https://img.shields.io/github/repo-size/breakdowns/slam-mirrorbot?color=red)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/breakdowns/slam-mirrorbot)
-![GitHub](https://img.shields.io/github/license/breakdowns/slam-mirrorbot)
-[![Slam Mirror Support](https://img.shields.io/badge/slam%20mirror%20bot-support%20group-blue)](https://t.me/SlamMirrorSupport)
+![GitHub Repo stars](https://img.shields.io/github/stars/vincreator/eunha?color=blue&style=flat)
+![GitHub forks](https://img.shields.io/github/forks/vincreator/eunha?color=green&style=flat)
+![GitHub issues](https://img.shields.io/github/issues/vincreator/eunha)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/vincreator/eunha)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/vincreator/eunha)
+![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/vincreator/eunha)
+![GitHub contributors](https://img.shields.io/github/contributors/vincreator/eunha?style=flat)
+![GitHub repo size](https://img.shields.io/github/repo-size/vincreator/eunha?color=red)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vincreator/eunha)
+![GitHub](https://img.shields.io/github/license/vincreator/eunha)
+[![Channel](https://img.shields.io/badge/Channel-blue)](https://t.me/Namexian)
 
 **Eunha Mirror Bot** is a _multipurpose_ Telegram Bot writen in Python for mirroring files on the Internet to our beloved Google Drive.
 
