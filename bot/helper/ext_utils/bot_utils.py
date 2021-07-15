@@ -4,7 +4,7 @@ import threading
 import time
 
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot import download_dict, download_dict_lock
+from bot import download_dict, download_dict_lock, FINISHED_PROGRESS_STR, UNFINISHED_PROGRESS_STR
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,13 +18,12 @@ class MirrorStatus:
     STATUS_DOWNLOADING = "Downloading...📥"
     STATUS_WAITING = "Queued...📝"
     STATUS_FAILED = "Failed 🚫. Cleaning Download..."
-    STATUS_CANCELLED = "Cancelled ❌. Cleaning Download..."
     STATUS_ARCHIVING = "Archiving...🔐"
     STATUS_EXTRACTING = "Extracting...📂"
 
 
 PROGRESS_MAX_SIZE = 100 // 8
-PROGRESS_INCOMPLETE = ['▏', '▎', '▍', '▌', '▋', '▊', '▉']
+# PROGRESS_INCOMPLETE = ['▏', '▎', '▍', '▌', '▋', '▊', '▉']
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
@@ -70,6 +69,13 @@ def getDownloadByGid(gid):
                     return dl
     return None
 
+def getAllDownload():
+    with download_dict_lock:
+        for dlDetails in list(download_dict.values()):
+            if dlDetails.status() == MirrorStatus.STATUS_DOWNLOADING \
+                    or dlDetails.status() == MirrorStatus.STATUS_WAITING:
+                if dlDetails:
+                    return dlDetails
 
 def get_progress_bar_string(status):
     completed = status.processed_bytes() / 8
@@ -81,10 +87,11 @@ def get_progress_bar_string(status):
     p = min(max(p, 0), 100)
     cFull = p // 8
     cPart = p % 8 - 1
-    p_str = '█' * cFull
+    p_str = FINISHED_PROGRESS_STR * cFull
     if cPart >= 0:
-        p_str += PROGRESS_INCOMPLETE[cPart]
-    p_str += ' ' * (PROGRESS_MAX_SIZE - cFull)
+        # p_str += PROGRESS_INCOMPLETE[cPart]
+        p_str += FINISHED_PROGRESS_STR
+    p_str += UNFINISHED_PROGRESS_STR * (PROGRESS_MAX_SIZE - cFull)
     p_str = f"[{p_str}]"
     return p_str
 
@@ -101,13 +108,15 @@ def get_readable_message():
                     msg += f"\n<b>Downloaded:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
                 else:
                     msg += f"\n<b>Uploaded:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
-                msg += f"\n<b>Speed:</b> {download.speed()}\n<b>ETA:</b> {download.eta()} "
+                msg += f"\n<b>Speed:</b> {download.speed()}" \
+                        f", <b>ETA:</b> {download.eta()} "
                 # if hasattr(download, 'is_torrent'):
                 try:
                     msg += f"\n<b>Seeders:</b> {download.aria_download().num_seeders}" \
                         f" | <b>Peers:</b> {download.aria_download().connections}"
                 except:
                     pass
+                msg += f'\n<b>User:</b> <a href="tg://user?id={download.message.from_user.id}">{download.message.from_user.first_name}</a> (<code>{download.message.from_user.id}</code>)'
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
                 msg += f"\n<b>To Stop:</b> <code>/{BotCommands.CancelMirror} {download.gid()}</code>"
             msg += "\n\n"
@@ -139,9 +148,11 @@ def is_url(url: str):
         return True
     return False
 
+def is_gdrive_link(url: str):
+    return "drive.google.com" in url
 
 def is_mega_link(url: str):
-    return "mega.nz" in url
+    return "mega.nz" in url or "mega.co.nz" in url
 
 def get_mega_link_type(url: str):
     if "folder" in url:

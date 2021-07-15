@@ -13,13 +13,13 @@ def sendMessage(text: str, bot, update: Update):
     try:
         return bot.send_message(update.message.chat_id,
                             reply_to_message_id=update.message.message_id,
-                            text=text, parse_mode='HTMl')
+                            text=text, allow_sending_without_reply=True,  parse_mode='HTMl')
     except Exception as e:
         LOGGER.error(str(e))
 def sendMarkup(text: str, bot, update: Update, reply_markup: InlineKeyboardMarkup):
     return bot.send_message(update.message.chat_id,
                             reply_to_message_id=update.message.message_id,
-                            text=text, reply_markup=reply_markup, parse_mode='HTMl')
+                            text=text, reply_markup=reply_markup, allow_sending_without_reply=True, parse_mode='HTMl')
 
 def editMessage(text: str, message: Message, reply_markup=None):
     try:
@@ -80,9 +80,9 @@ def update_all_messages():
         for download in list(download_dict.values()):
             speedy = download.speed()
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
-                if 'KiB/s' in speedy:
+                if 'K' in speedy:
                     dlspeed_bytes += float(speedy.split('K')[0]) * 1024
-                elif 'MiB/s' in speedy:
+                elif 'M' in speedy:
                     dlspeed_bytes += float(speedy.split('M')[0]) * 1048576 
             if download.status() == MirrorStatus.STATUS_UPLOADING:
                 if 'KB/s' in speedy:
@@ -118,9 +118,9 @@ def sendStatusMessage(msg, bot):
         for download in list(download_dict.values()):
             speedy = download.speed()
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
-                if 'KiB/s' in speedy:
+                if 'K' in speedy:
                     dlspeed_bytes += float(speedy.split('K')[0]) * 1024
-                elif 'MiB/s' in speedy:
+                elif 'M' in speedy:
                     dlspeed_bytes += float(speedy.split('M')[0]) * 1048576 
             if download.status() == MirrorStatus.STATUS_UPLOADING:
                 if 'KB/s' in speedy:
