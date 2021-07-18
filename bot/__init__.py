@@ -89,6 +89,7 @@ if os.path.exists('sudo_users.txt'):
     with open('sudo_users.txt', 'r+') as f:
         lines = f.readlines()
         for line in lines:
+            AUTHORIZED_CHATS.add(int(line.split()[0]))
             SUDO_USERS.add(int(line.split()[0]))
 try:
     achats = getConfig('AUTHORIZED_CHATS')
@@ -101,6 +102,7 @@ try:
     schats = getConfig('SUDO_USERS')
     schats = schats.split(" ")
     for chats in schats:
+        AUTHORIZED_CHATS.add(int(chats))
         SUDO_USERS.add(int(chats))
 except:
     pass
@@ -158,6 +160,14 @@ telegraph = Telegraph()
 telegraph.create_account(short_name=sname)
 telegraph_token = telegraph.get_access_token()
 
+try:
+    STATUS_LIMIT = getConfig('STATUS_LIMIT')
+    if len(STATUS_LIMIT) == 0:
+        raise KeyError
+    else:
+        STATUS_LIMIT = int(getConfig('STATUS_LIMIT'))
+except KeyError:
+    STATUS_LIMIT = None
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
 except KeyError:

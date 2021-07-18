@@ -49,10 +49,12 @@ tgx, yts, eztv, torlock, rarbg
 ```
 - Direct links Supported:
 ```
-letsupload.io, hxfile.co, anonfiles.com, fembed.com, femax20.com, layarkacaxxi.icu,
-naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamsb.net,
-feurl.com, pixeldrain.com, uptobox.com (Uptobox account must be premium),
-1drv.ms (Only works for file not folder or business account)
+letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles,
+fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream,
+sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com,
+streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net,
+1drv.ms (Only works for file not folder or business account),
+uptobox.com (Uptobox account must be premium)
 ```
 </details>
 
@@ -173,6 +175,7 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - **MEGA_PASSWORD**: Your password for your mega.nz account
 - **BLOCK_MEGA_FOLDER**: If you want to remove mega.nz folder support, set it to `True`.
 - **BLOCK_MEGA_LINKS**: If you want to remove mega.nz mirror support, set it to `True`.
+- **STATUS_LIMIT**: Status limit with buttons (**NOTE**: Recommend limit status to ```4``` tasks max).
 - **STOP_DUPLICATE_MIRROR**: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
 - **STOP_DUPLICATE_MEGA**: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading Mega will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
 - **STOP_DUPLICATE_CLONE**: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, cloning will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
