@@ -51,7 +51,11 @@
         "required": false
       },
       "AUTHORIZED_CHATS": {
-        "description": "Fill User ID and Chat ID of you want to authorize.",
+        "description": "Fill User ID and Chat ID of you want to authorize, Seprate them with space.",
+        "required": false
+      },
+      "SUDO_USERS": {
+        "description": "Fill user_id (not username) of you want to sudoers, Seprate them with space.",
         "required": false
       },
       "INDEX_URL": {
@@ -75,7 +79,7 @@
         "required": true
       },
       "UPSTREAM_REPO": {
-        "description": "Link for Bot Upstream Repo.",
+        "description": "Link for Bot Upstream Repo, If you want default update, Fill https://github.com/vincreator/eunha.",
         "value": "https://github.com/vincreator/eunha",
         "required": true
       },
@@ -110,7 +114,6 @@
       },
       "TORRENT_DIRECT_LIMIT": {
         "description": "To limit the Torrent/Direct mirror size, Leave space between number and unit. Available units is (gb or GB, tb or TB).",
-        "value": "15",
         "required": false
       },
       "TAR_UNZIP_LIMIT": {
@@ -147,11 +150,6 @@
       },
       "SHORTENER_API": {
         "description": "Fill your shortener api key if you are using shortener.",
-        "required": false
-      },
-      "IMAGE_URL": {
-        "description": "Show Image/Logo in /start message, Use telegra.ph or any direct link image.",
-        "value": "https://telegra.ph/file/c428e326b6fbb65bd2f98.jpg",
         "required": false
        },
       "TOKEN_PICKLE_URL": {
@@ -191,25 +189,21 @@
         "description": "Fill your URL if you are using extra buttons.",
         "required": false
       },
-      "FINISHED_PROGRESS_STR": {
-        "description": "Single character for finished progress",
-        "value": "●",
-        "required": false
-      },
-      "UNFINISHED_PROGRESS_STR": {
-        "description": "Single character for unfinished progress",
-        "value": "○",
-        "required": false
-      },
       "STATUS_LIMIT": {
         "description": "Status limit with buttons, Recommend limit status to 4 tasks max.",
         "value": "",
-        "required": false  
+        "required": false
       }
     },
     "addons": [
       {
         "plan": "heroku-postgresql"
       }
-    ]
+    ],
+    "formation": {
+            "worker": {
+                "quantity": 1,
+                "size": "free"
+            }
+      }
 }

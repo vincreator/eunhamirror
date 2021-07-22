@@ -2,6 +2,7 @@ aiohttp
 aria2p
 appdirs
 beautifulsoup4
+cloudscrape
 feedparser
 gitpython
 google-api-python-client
@@ -20,7 +21,6 @@ pyrogram
 python-dotenv
 python-magic
 python-telegram-bot
-pytz
 requests
 speedtest-cli
 telegraph

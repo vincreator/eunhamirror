@@ -5,13 +5,10 @@ import os
 from pyrogram import idle
 from bot import app
 from sys import executable
-from datetime import datetime
-import pytz
-import time
 
 from telegram import ParseMode
 from telegram.ext import CommandHandler
-from bot import bot, dispatcher, updater, botStartTime, IMAGE_URL, IGNORE_PENDING_REQUESTS
+from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import *
@@ -20,12 +17,9 @@ from .helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper import button_build
 from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, torrent_search, delete, speedtest, usage, mediainfo, count, config, updates
 
-now=datetime.now(pytz.timezone('Asia/Jakarta'))
-
 
 def stats(update, context):
     currentTime = get_readable_time(time.time() - botStartTime)
-    current = now.strftime('%Y/%m/%d %I:%M:%S %p')
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
     used = get_readable_file_size(used)
@@ -36,7 +30,6 @@ def stats(update, context):
     memory = psutil.virtual_memory().percent
     disk = psutil.disk_usage('/').percent
     stats = f'<b>Bot Uptime:</b> {currentTime}\n' \
-            f'<b>Start Time:</b> {current}\n' \
             f'<b>Total Disk Space:</b> {total}\n' \
             f'<b>Used:</b> {used}  ' \
             f'<b>Free:</b> {free}\n\n' \
@@ -45,7 +38,7 @@ def stats(update, context):
             f'<b>CPU:</b> {cpuUsage}%\n' \
             f'<b>RAM:</b> {memory}%\n' \
             f'<b>DISK:</b> {disk}%'
-    update.effective_message.reply_photo(IMAGE_URL, stats, parse_mode=ParseMode.HTML)
+    sendMessage(stats, context.bot, update)
 
 
 def start(update, context):
@@ -63,7 +56,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
         if update.message.chat.type == "private" :
             sendMessage(f"Hey I'm Alive 🙂\nSince: <code>{uptime}</code>", context.bot, update)
         else :
-            update.effective_message.reply_photo(IMAGE_URL, start_string, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+            sendMarkup(start_string, context.bot, update, reply_markup)
     else :
         sendMessage(f"Oops! not a Authorized user.", context.bot, update)
 
