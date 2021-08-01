@@ -53,7 +53,7 @@ letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles,
 fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream,
 sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com,
 streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net,
-1drv.ms (Only works for file not folder or business account),
+1fichier.com, solidfiles.com, 1drv.ms (Only works for file not folder or business account),
 uptobox.com (Uptobox account must be premium)
 ```
 </details>
@@ -422,6 +422,8 @@ Thanks to:
 - [magneto261290](https://github.com/magneto261290/) for some features
 - [SVR666](https://github.com/SVR666/) for some features & fixes
 - [anasty17](https://github.com/anasty17) for some features & help
+- [breakdowns](https://github.com/breakdowns) for slam-aria-mirror-bot
+- [zevtyardt](https://github.com/zevtyardt) for some direct links
 
 </details>
 
