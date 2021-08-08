@@ -20,6 +20,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 REPO_ = UPSTREAM_REPO
 BRANCH_ = UPSTREAM_BRANCH
 
+
 # Update Command
 
 @app.on_message(filters.command([BotCommands.UpdateCommand, f'{BotCommands.UpdateCommand}@{bot.username}']) & filters.user(OWNER_ID))
@@ -29,7 +30,7 @@ async def update_it(client, message):
         repo = Repo()
     except GitCommandError:
         return await msg_.edit(
-            "**Invalid Git Command. Please Report This Bug To [Support Group](https://t.me/SlamMirrorSupport)**"
+            "**Invalid Git Command. Please Report This Bug To [Support Group](https://t.me/EunhaMirror)**"
         )
     except InvalidGitRepositoryError:
         repo = Repo.init()
@@ -56,6 +57,7 @@ async def update_it(client, message):
             ups_rem.pull(UPSTREAM_BRANCH)
         except GitCommandError:
             repo.git.reset("--hard", "FETCH_HEAD")
+        subprocess.run(["pip3",  "install", "--no-cache-dir", "-r",  "requirements.txt"])
         await msg_.edit("`Updated Sucessfully! Give Me Some Time To Restart!`")
         with open("./aria.sh", 'rb') as file:
             script = file.read()

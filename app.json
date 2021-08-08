@@ -7,9 +7,9 @@
     "telegram",
     "python"
     ],
-    "repository": "https://github.com/vincreator/eunha",
+    "repository": "https://github.com/vincreator/Eunha-Mirror-bot",
     "website": "",
-    "success_url": "https://github.com/vincreator/eunha/master/README.md",
+    "success_url": "https://github.com/vincreator/Eunha-Mirror-bot/master/README.md",
     "stack": "container",
     "env": {
       "ENV": {
@@ -80,7 +80,7 @@
       },
       "UPSTREAM_REPO": {
         "description": "Link for Bot Upstream Repo, If you want default update, Fill https://github.com/vincreator/eunha.",
-        "value": "https://github.com/vincreator/eunha",
+        "value": "https://github.com/vincreator/Eunha-Mirror-bot",
         "required": true
       },
       "UPSTREAM_BRANCH": {
@@ -185,6 +185,11 @@
         "description": "Status limit with buttons, Recommend limit status to 4 tasks max.",
         "value": "",
         "required": false
+      },
+      "BASE_URL_OF_BOT": {
+        "description": "Enter your Heroku app link to avoid the app from sleeping and to make it work with Torrent selection",
+        "value": "https://yourappname.herokuapp.com",
+        "required": true
       }
     },
     "addons": [
@@ -193,7 +198,7 @@
       }
     ],
     "formation": {
-            "worker": {
+            "web": {
                 "quantity": 1,
                 "size": "free"
             }

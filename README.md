@@ -1,16 +1,16 @@
 [![Betterme](https://telegra.ph/file/044017033ca7028c9fc85.jpg)](https://youtu.be/s2TktuIA9-s)
 
 # Eunha Mirror Bot
-![GitHub Repo stars](https://img.shields.io/github/stars/vincreator/eunha?color=blue&style=flat)
-![GitHub forks](https://img.shields.io/github/forks/vincreator/eunha?color=green&style=flat)
-![GitHub issues](https://img.shields.io/github/issues/vincreator/eunha)
-![GitHub closed issues](https://img.shields.io/github/issues-closed/vincreator/eunha)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/vincreator/eunha)
-![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/vincreator/eunha)
-![GitHub contributors](https://img.shields.io/github/contributors/vincreator/eunha?style=flat)
-![GitHub repo size](https://img.shields.io/github/repo-size/vincreator/eunha?color=red)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vincreator/eunha)
-![GitHub](https://img.shields.io/github/license/vincreator/eunha)
+![GitHub Repo stars](https://img.shields.io/github/stars/vincreator/Eunha-Mirror-bot?color=blue&style=flat)
+![GitHub forks](https://img.shields.io/github/forks/vincreator/Eunha-Mirror-bot?color=green&style=flat)
+![GitHub issues](https://img.shields.io/github/issues/vincreator/Eunha-Mirror-bot)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/vincreator/Eunha-Mirror-bot)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/vincreator/Eunha-Mirror-bot)
+![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/vincreator/Eunha-Mirror-bot)
+![GitHub contributors](https://img.shields.io/github/contributors/vincreator/Eunha-Mirror-bot?style=flat)
+![GitHub repo size](https://img.shields.io/github/repo-size/vincreator/Eunha-Mirror-bot?color=red)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/vincreator/Eunha-Mirror-bot)
+![GitHub](https://img.shields.io/github/license/vincreator/Eunha-Mirror-bot)
 [![Channel](https://img.shields.io/badge/Channel-blue)](https://t.me/Namexian)
 
 **Eunha Mirror Bot** is a _multipurpose_ Telegram Bot writen in Python for mirroring files on the Internet to our beloved Google Drive.
@@ -156,41 +156,40 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - **TELEGRAM_API**: This is to authenticate to your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org DO NOT put this in quotes.
 - **TELEGRAM_HASH**: This is to authenticate to your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org
 - **OWNER_ID**: The Telegram user ID (not username) of the Owner of the bot
-- **DATABASE_URL**: Your Database URL. See [Generate Database](https://github.com/vincreator/eunha/tree/master#generate-database) to generate database. (**NOTE**: If you deploying on Heroku using Heroku button, no need to generate database manually, because it will automatic generate database when first deploying)
 - **GDRIVE_FOLDER_ID**: This is the folder ID of the Google Drive Folder to which you want to upload all the mirrors.
 - **DOWNLOAD_DIR**: The path to the local folder where the downloads should be downloaded to
 - **DOWNLOAD_STATUS_UPDATE_INTERVAL**: A short interval of time in seconds after which the Mirror progress message is updated. (I recommend to keep it `5` seconds at least)  
 - **AUTO_DELETE_MESSAGE_DURATION**: Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. (**Note**: Set to `-1` to never automatically delete messages)
-- **UPSTREAM_REPO**: Link for Bot Upstream Repo, if you want default update, fill ```https://github.com/vincreator/eunha```.
-- **UPSTREAM_BRANCH**: Branch name for Bot Upstream Repo, fill ```master```.
+- **UPSTREAM_REPO**: Link for Bot Upstream Repo, if you want default update, fill `https://github.com/vincreator/Eunha-Mirror-bot`.
+- **UPSTREAM_BRANCH**: Branch name for Bot Upstream Repo, fill `master`.
 ### Optional Field
 - **ACCOUNTS_ZIP_URL**: Only if you want to load your Service Account externally from an Index Link. Archive your Service Account json files to a zip file directly (don't archive the accounts folder. Select all the jsons inside and zip them only instead. Name the zip file with whatever you want, it doesn't matter). Fill this with the direct link of that file.
 - **TOKEN_PICKLE_URL**: Only if you want to load your **token.pickle** externally from an Index Link. Fill this with the direct link of that file.
-- **AUTHORIZED_CHATS**: Fill user_id and chat_id (not username) of you want to authorize, Seprate them with space, Examples: ```-0123456789 -1122334455 6915401739```.
+- **DATABASE_URL**: Your Database URL. See [Generate Database](https://github.com/vincreator/Eunha-Mirror-bot/tree/master#generate-database) to generate database (**NOTE**: If you use database you can save your sudo id permanent using `/addsudo` command).
+- **AUTHORIZED_CHATS**: Fill user_id and chat_id (not username) of you want to authorize, Seprate them with space, Examples: `-0123456789 -1122334455 6915401739`.
+- **SUDO_USERS**: Fill user_id (not username) of you want to sudoers, Seprate them with space, Examples: `0123456789 1122334455 6915401739` (**NOTE**: If you want save sudo id permanent without database, you must fill your sudo id there).
 - **IS_TEAM_DRIVE**: Set to `True` if `GDRIVE_FOLDER_ID` is from a Team Drive else `False` or Leave it empty.
-- **USE_SERVICE_ACCOUNTS**: (Leave empty if unsure) Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/vincreator/eunha#generate-service-accounts-what-is-service-account) section below.
+- **USE_SERVICE_ACCOUNTS**: (Leave empty if unsure) Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/vincreator/Eunha-Mirror-bot#generate-service-accounts-what-is-service-account) section below.
 - **INDEX_URL**: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index The URL should not have any trailing '/'
 - **MEGA_API_KEY**: Mega.nz api key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk)
 - **MEGA_EMAIL_ID**: Your email id you used to sign up on mega.nz for using premium accounts (Leave th)
 - **MEGA_PASSWORD**: Your password for your mega.nz account
 - **BLOCK_MEGA_FOLDER**: If you want to remove mega.nz folder support, set it to `True`.
 - **BLOCK_MEGA_LINKS**: If you want to remove mega.nz mirror support, set it to `True`.
-- **STATUS_LIMIT**: Status limit with buttons (**NOTE**: Recommend limit status to ```4``` tasks max).
-- **STOP_DUPLICATE_MIRROR**: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
-- **STOP_DUPLICATE_MEGA**: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading Mega will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
-- **STOP_DUPLICATE_CLONE**: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, cloning will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
-- **CLONE_LIMIT**: To limit cloning Google Drive (leave space between number and unit, Available units is (gb or GB, tb or TB), Examples: ```100 gb, 100 GB, 10 tb, 10 TB```
-- **MEGA_LIMIT**: To limit downloading Mega (leave space between number and unit, Available units is (gb or GB, tb or TB), Examples: ```100 gb, 100 GB, 10 tb, 10 TB```
-- **TORRENT_DIRECT_LIMIT**: To limit the Torrent/Direct mirror size, Leave space between number and unit. Available units is (gb or GB, tb or TB), Examples: ```100 gb, 100 GB, 10 tb, 10 TB```
-- **TAR_UNZIP_LIMIT**: To limit mirroring as Tar or unzipmirror. Available units is (gb or GB, tb or TB), Examples: ```100 gb, 100 GB, 10 tb, 10 TB```
-- **IMAGE_URL**: Show Image/Logo in /start message. Fill value of image your link image, use telegra.ph or any direct link image.
+- **STOP_DUPLICATE**: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
+- **CLONE_LIMIT**: To limit cloning Google Drive (leave space between number and unit, Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
+- **MEGA_LIMIT**: To limit downloading Mega (leave space between number and unit, Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
+- **TORRENT_DIRECT_LIMIT**: To limit the Torrent/Direct mirror size, Leave space between number and unit. Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
+- **TAR_UNZIP_LIMIT**: To limit mirroring as Tar or unzipmirror. Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
 - **VIEW_LINK**: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if the END of link from browser link bar is `?a=view`, if yes make it `True` it will work (Compatible with [Bhadoo Index](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code)
 - **UPTOBOX_TOKEN**: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
 - **HEROKU_API_KEY**: (Only if you deploying on Heroku) Your Heroku API key, get it from https://dashboard.heroku.com/account.
 - **HEROKU_APP_NAME**: (Only if you deploying on Heroku) Your Heroku app name.
 - **IGNORE_PENDING_REQUESTS**: If you want the bot to ignore pending requests after it restarts, set this to `True`.
-- **FINISHED_PROGRESS_STR**: Single character for finished progress. Example: "Uploading ●●●●○○○○ %50". This value sets: "●". You can Select any character from these listed sites: https://coolsymbol.com, https://changaco.oy.lc/unicode-progress-bars/, https://text-symbols.com/
-- **UNFINISHED_PROGRESS_STR**: Single character for finished progress. Example: "Uploading ●●●●○○○○ %50". This value sets: "○". You can Select any character from these listed sites: https://coolsymbol.com, https://changaco.oy.lc/unicode-progress-bars/, https://text-symbols.com/
+- **STATUS_LIMIT**: Status limit with buttons (**NOTE**: Recommend limit status to `4` tasks max).
+- **IS_VPS**: Set it to `True` if you use VPS
+- **SERVER_PORT**: Your VPS port
+- **BASE_URL_OF_BOT**: Valid BASE URL of where the bot is deploy. Ip/domain of your bot like `http://myip` or if you have chosen other port then `80` then `http://myip:port`. No slash at the end, for Heroku fill `https://yourappname.herokuapp.com`.
 - **SHORTENER_API**: Fill your Shortener api key if you are using Shortener.
 - **SHORTENER**: if you want to use Shortener in Gdrive and index link, fill Shortener url here. Examples:
 ```
@@ -410,6 +409,22 @@ Where host is the name of extractor (eg. Youtube, Twitch). Multiple accounts of 
 
 </details>
 
+# Uptime your apps
+this function is to turn on your bot so it doesn't fall asleep.
+<details>
+    <summary><b>Click here for more details</b></summary>
+
+choose one of these:
+
+- [Cron Job](https://cron-job.org) Just put your app link
+- [Uptime Robot](https://uptimerobot.com) Just put your app link
+- [Kaffeine](https://kaffeine.herokuapp.com) Just put your app link
+- [PingDom](https://pingdom.com) Just put your app link
+- [AddOn Newrelic](https://elements.heroku.com/addons/newrelic)
+- [AddOn Scheduler](https://elements.heroku.com/addons/scheduler)
+
+</details>            
+            
 # Credits
 
 Thanks to:
