@@ -13,6 +13,7 @@ def _watch(bot: Bot, update, isTar=False):
     mssg = update.message.text
     message_args = mssg.split(' ')
     name_args = mssg.split('|')
+    
     try:
         link = message_args[1]
     except IndexError:
@@ -20,9 +21,10 @@ def _watch(bot: Bot, update, isTar=False):
         msg += "<b>Note: Quality and custom name are optional</b>\n\nExample of quality: audio, 144, 240, 360, 480, 720, 1080, 2160."
         msg += "\n\nIf you want to use custom filename, enter it after |"
         msg += f"\n\nExample:\n<code>/{BotCommands.WatchCommand} https://youtu.be/Pk_TthHfLeE 720 |Eunha</code>\n\n"
-        msg += "This file will be downloaded in 720p quality and it's name will be <b>Slam</b>"
+        msg += "This file will be downloaded in 720p quality and it's name will be <b>Eunha</b>"
         sendMessage(msg, bot, update)
         return
+    
     try:
       if "|" in mssg:
         mssg = mssg.split("|")
@@ -35,11 +37,12 @@ def _watch(bot: Bot, update, isTar=False):
         qual = f'bestvideo[height<={qual}]+bestaudio/best[height<={qual}]'
     except IndexError:
       qual = "bestvideo+bestaudio/best"
+    
     try:
       name = name_args[1]
     except IndexError:
       name = ""
-    reply_to = update.message.reply_to_message
+    
     pswd = ""
     listener = MirrorListener(bot, update, pswd, isTar)
     ydl = YoutubeDLHelper(listener)
@@ -59,5 +62,7 @@ mirror_handler = CommandHandler(BotCommands.WatchCommand, watch,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 tar_mirror_handler = CommandHandler(BotCommands.TarWatchCommand, watchTar,
                                     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+
+
 dispatcher.add_handler(mirror_handler)
 dispatcher.add_handler(tar_mirror_handler)
