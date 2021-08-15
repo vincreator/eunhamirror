@@ -183,6 +183,7 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - **TAR_UNZIP_LIMIT**: To limit mirroring as Tar or unzipmirror. Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
 - **VIEW_LINK**: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if the END of link from browser link bar is `?a=view`, if yes make it `True` it will work (Compatible with [Bhadoo Index](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code)
 - **UPTOBOX_TOKEN**: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
+- **HEROKU_EMAIL**: Heroku Account email Id in which the above app will be deployed (**NOTE**: Only needed if you deploying on Heroku with Github Workflow).
 - **HEROKU_API_KEY**: (Only if you deploying on Heroku) Your Heroku API key, get it from https://dashboard.heroku.com/account.
 - **HEROKU_APP_NAME**: (Only if you deploying on Heroku) Your Heroku app name.
 - **IGNORE_PENDING_REQUESTS**: If you want the bot to ignore pending requests after it restarts, set this to `True`.
@@ -247,17 +248,80 @@ sudo docker run mirrorbot
 ```
 </details>
 
-## Deploying on Heroku
+## Deploying on Heroku with Github Workflows.
 <details>
     <summary><b>Click here for more details</b></summary>
 
-- Give stars and Fork this repo then upload **token.pickle** to your forks
-- Hit the **DEPLOY TO HEROKU** button and follow the further instructions in the screen
-- **NOTE**: If you didn't upload **token.pickle**, uploading will not work, or you can upload your **token.pickle** to your Index and put your **token.pickle** link to **TOKEN_PICKLE_URL**. How to generate **token.pickle**? [Read here](https://github.com/vincreator/eunha#getting-google-oauth-api-credential-file)
-- Recommended to use 1 App in 1 Heroku accounts
-</details>
+## Pre-requisites
 
-<p><a href="https://heroku.com/deploy"> <img src="https://img.shields.io/badge/Deploy%20To%20Heroku-blueviolet?style=for-the-badge&logo=heroku" width="200""/></a></p>
+- [Heroku](https://heroku.com) accounts
+- Recommended to use 1 App in 1 Heroku accounts
+- Don't use bin/fake credits card, because your Heroku account will banned
+
+## Deployment
+
+1. Give stars and Fork this repo then upload **token.pickle** to your forks, or you can upload your **token.pickle** to your Index and put your **token.pickle** link to **TOKEN_PICKLE_URL** (**NOTE**: If you didn't upload **token.pickle** uploading will not work). How to generate **token.pickle**? [Read here](https://github.com/vincreator/Eunha-Mirror-bot#getting-google-oauth-api-credential-file)
+
+2. Go to Repository `Settings` -> `Secrets`
+
+	![secrets](https://telegra.ph/file/bb8cb0eced5caad68a41b.jpg)
+
+3. Add the below Required Variables one by one by clicking `New Repository Secret` everytime.
+
+	```
+	HEROKU_EMAIL
+	HEROKU_API_KEY
+	HEROKU_APP_NAME
+	BASE_URL_OF_BOT
+	BOT_TOKEN
+	TELEGRAM_API
+	TELEGRAM_HASH
+	OWNER_ID
+	GDRIVE_FOLDER_ID
+	DOWNLOAD_DIR
+	DOWNLOAD_STATUS_UPDATE_INTERVAL
+	AUTO_DELETE_MESSAGE_DURATION
+	UPSTREAM_REPO
+	UPSTREAM_BRANCH
+	```
+
+	### Description of the above Required Variables
+	* `HEROKU_EMAIL` Heroku Account email Id in which the above app will be deployed
+	* `HEROKU_API_KEY` Go to your Heroku account and go to Account Settings. Scroll to the bottom until you see API Key. Copy this key and add it
+	* `HEROKU_APP_NAME` Your Heroku app name, Name Must be unique
+	* `BASE_URL_OF_BOT` Enter your Heroku app link to avoid the app from sleeping and to make it work with Torrent selection, Example: `https://yourappname.herokuapp.com` (**NOTE**: No slash at the end)
+	* `BOT_TOKEN` The Telegram bot token that you get from https://t.me/BotFather.
+	* `TELEGRAM_API` This is to authenticate to your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org DO NOT put this in quotes
+	* `TELEGRAM_HASH` This is to authenticate to your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org
+	* `OWNER_ID` The Telegram user ID (not username) of the Owner of the bot
+	* `GDRIVE_FOLDER_ID` This is the folder ID of the Google Drive Folder to which you want to upload all the mirrors
+	* `DOWNLOAD_DIR` The path to the local folder where the downloads should be downloaded to
+	* `DOWNLOAD_STATUS_UPDATE_INTERVAL` A short interval of time in seconds after which the Mirror progress message is updated. (I recommend to keep it `5` seconds at least)
+	* `AUTO_DELETE_MESSAGE_DURATION` Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. (**Note**: Set to `-1` to never automatically delete messages)
+	* `UPSTREAM_REPO` Link for Bot Upstream Repo, if you want default update, fill `https://github.com/vincreator/Eunha-Mirror-bot`
+	* `UPSTREAM_BRANCH` Branch name for Bot Upstream Repo, fill `master`
+	### For Optional Variables you can get from [Here](https://github.com/vincreator/Eunha-Mirror-bot#setting-up-config-file) 
+
+4. After adding all the above Required Variables go to Github Actions tab in your repo
+
+5. Select `Manually Deploy to heroku` workflow as shown below:
+
+	![Example Manually Deploy to Heroku](https://telegra.ph/file/38ffda0165d9671f1d5dc.jpg)
+
+6. Then click on Run workflow
+
+	![Run workflow](https://telegra.ph/file/c5b4c2e02f585cb59fe5c.jpg)
+
+7. _Done!_ your bot will be deployed now.
+
+## NOTE
+- Don't change/edit variables from Heroku if you want to change/edit do it from Github Secrets
+- If you want to set optional variables, go to your Heroku app settings and add the variables
+
+## Credits
+- [arghyac35](https://github.com/arghyac35) for Tutorial
+
+</details>
 
 ## Deploying on Heroku with heroku-cli and Goorm IDE
 <p><a href="https://telegra.ph/How-to-Deploy-a-Mirror-Bot-to-Heroku-with-CLI-05-06"> <img src="https://img.shields.io/badge/see%20on%20telegraph-grey?style=for-the-badge" width="190""/></a></p>
