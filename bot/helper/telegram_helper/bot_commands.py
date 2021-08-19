@@ -4,6 +4,7 @@ class _BotCommands:
         self.MirrorCommand = 'seed'
         self.UnzipMirrorCommand = 'unpack'
         self.TarMirrorCommand = 'pack'
+        self.ZipMirrorCommand = 'zip'
         self.CancelMirror = 'cancel'
         self.CancelAllCommand = 'cancelall'
         self.ListCommand = 'list'
