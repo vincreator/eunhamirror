@@ -277,6 +277,7 @@ sudo docker run mirrorbot
 	TELEGRAM_API
 	TELEGRAM_HASH
 	OWNER_ID
+	IS_TEAM_DRIVE
 	GDRIVE_FOLDER_ID
 	DOWNLOAD_DIR
 	DOWNLOAD_STATUS_UPDATE_INTERVAL
@@ -294,6 +295,7 @@ sudo docker run mirrorbot
 	* `TELEGRAM_API` This is to authenticate to your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org DO NOT put this in quotes
 	* `TELEGRAM_HASH` This is to authenticate to your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org
 	* `OWNER_ID` The Telegram user ID (not username) of the Owner of the bot
+	* `IS_TEAM_DRIVE` True (if use team drive) False (If not, or don't input)
 	* `GDRIVE_FOLDER_ID` This is the folder ID of the Google Drive Folder to which you want to upload all the mirrors
 	* `DOWNLOAD_DIR` The path to the local folder where the downloads should be downloaded to
 	* `DOWNLOAD_STATUS_UPDATE_INTERVAL` A short interval of time in seconds after which the Mirror progress message is updated. (I recommend to keep it `5` seconds at least)
