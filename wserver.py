@@ -205,7 +205,7 @@ input[type="submit"]:hover, input[type="submit"]:focus{
         </a>
       </div>
       <div class="social">
-        <a href="https://github.com/vincreator/Eunha-Mirror-bot"><i class="fab fa-github"></i></a>
+        <a href="https://github.com/vincreator/eunhamirror"><i class="fab fa-github"></i></a>
         <a href="https://t.me/EunhaMirror"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
@@ -530,7 +530,7 @@ section span{
         </a>
       </div>
       <div class="social">
-        <a href="https://github.com/vincreator/Eunha-Mirror-bot"><i class="fab fa-github"></i></a>
+        <a href="https://github.com/vincreator/eunhamirror"><i class="fab fa-github"></i></a>
         <a href="https://t.me/EunhaMirror"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
