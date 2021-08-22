@@ -37,8 +37,6 @@ def direct_link_generator(link: str):
         return zippy_share(link)
     elif 'yadi.sk' in link:
         return yandex_disk(link)
-    elif 'cloud.mail.ru' in link:
-        return cm_ru(link)
     elif 'mediafire.com' in link:
         return mediafire(link)
     elif 'uptobox.com' in link:
@@ -140,23 +138,6 @@ def yandex_disk(url: str) -> str:
         raise DirectDownloadLinkException("ERROR: File not found/Download limit reached\n")
 
 
-def cm_ru(url: str) -> str:
-    """cloud.mail.ru direct links generator
-    Using https://github.com/JrMasterModelBuilder/cmrudl.py"""
-    try:
-        link = re.findall(r'\bhttps?://.*cloud\.mail\.ru\S+', url)[0]
-    except IndexError:
-        raise DirectDownloadLinkException('No cloud.mail.ru links found\n')
-    command = f'vendor/cmrudl/cmrudl -s {link}'
-    result = popen(command).read()
-    result = result.splitlines()[-1]
-    try:
-        data = json.loads(result)
-    except json.decoder.JSONDecodeError:
-        raise DirectDownloadLinkException("Error: Can't extract the link\n")
-    return data["download"]
-
-
 def uptobox(url: str) -> str:
     """ Uptobox direct links generator
     based on https://github.com/jovanzers/WinTenCermin """
@@ -228,7 +209,7 @@ def github(url: str) -> str:
 def hxfile(url: str) -> str:
     """ Hxfile direct link generator
     Based on https://github.com/zevtyardt/lk21
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/Slam-Team/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_filesIm(url)
     return dl_url
@@ -237,7 +218,7 @@ def hxfile(url: str) -> str:
 def anonfiles(url: str) -> str:
     """ Anonfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/Slam-Team/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_anonfiles(url)
     return dl_url
@@ -246,7 +227,7 @@ def anonfiles(url: str) -> str:
 def letsupload(url: str) -> str:
     """ Letsupload direct link generator
     Based on https://github.com/zevtyardt/lk21
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/Slam-Team/slam-mirrorbot """
     dl_url = ''
     try:
         link = re.findall(r'\bhttps?://.*letsupload\.io\S+', url)[0]
@@ -260,7 +241,7 @@ def letsupload(url: str) -> str:
 def fembed(link: str) -> str:
     """ Fembed direct link generator
     Based on https://github.com/zevtyardt/lk21
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/Slam-Team/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_fembed(link)
     lst_link = []
@@ -273,7 +254,7 @@ def fembed(link: str) -> str:
 def sbembed(link: str) -> str:
     """ Sbembed direct link generator
     Based on https://github.com/zevtyardt/lk21
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/Slam-Team/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_sbembed(link)
     lst_link = []
@@ -314,7 +295,7 @@ def pixeldrain(url: str) -> str:
 def antfiles(url: str) -> str:
     """ Antfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/breakdowns/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_antfiles(url)
     return dl_url
@@ -323,7 +304,7 @@ def antfiles(url: str) -> str:
 def streamtape(url: str) -> str:
     """ Streamtape direct link generator
     Based on https://github.com/zevtyardt/lk21
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/Slam-Team/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_streamtape(url)
     return dl_url
@@ -331,7 +312,7 @@ def streamtape(url: str) -> str:
 
 def racaty(url: str) -> str:
     """ Racaty direct links generator
-    based on https://github.com/breakdowns/slam-aria-mirror-bot """
+    based on https://github.com/Slam-Team/slam-mirrorbot """
     dl_url = ''
     try:
         link = re.findall(r'\bhttps?://.*racaty\.net\S+', url)[0]
@@ -351,7 +332,7 @@ def racaty(url: str) -> str:
 def fichier(link: str) -> str:
     """ 1Fichier direct links generator
     Based on https://github.com/Maujar
-             https://github.com/breakdowns/slam-aria-mirror-bot """
+             https://github.com/Slam-Team/slam-mirrorbot """
     regex = r"^([http:\/\/|https:\/\/]+)?.*1fichier\.com\/\?.+"
     gan = re.match(regex, link)
     if not gan:
