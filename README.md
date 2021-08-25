@@ -32,7 +32,6 @@
 - Sudo with Database support
 - Multiple Trackers support
 - Check Heroku dynos stats
-- Heroku config support
 - Updater (Only for Heroku)
 - Extracting **tar.xz** support
 - Create Tar Google Drive folder
@@ -42,6 +41,7 @@
 - Shell and Executor
 - View Link button
 - Shell and Executor
+- Qbittorrent supported
 - Torrent search Supported:
 ```
 nyaa.si, sukebei, 1337x, piratebay,
@@ -251,7 +251,7 @@ sudo docker run mirrorbot
 ## Deploying on Heroku with Github Workflows.
 <details>
     <summary><b>Click here for more details</b></summary>
-
+    
 ## Pre-requisites
 
 - [token.pickle](https://github.com/vincreator/eunhamirror#getting-google-oauth-api-credential-file)
@@ -261,7 +261,7 @@ sudo docker run mirrorbot
 
 ## Deployment
 
-1. Give a star and Fork this repo then upload **token.pickle** to your forks, or you can upload your **token.pickle** to your Index and put your **token.pickle** link to **TOKEN_PICKLE_URL** (**NOTE**: If you don't upload **token.pickle** uploading will not work).
+1. Give a star and Fork this repo then upload **token.pickle** to your forks, or you can upload your **token.pickle** to your Index and put your **token.pickle** link to `TOKEN_PICKLE_URL` (**NOTE**: If you don't upload **token.pickle** uploading will not work).
 
 2. Go to Repository `Settings` -> `Secrets`
 
@@ -272,13 +272,20 @@ sudo docker run mirrorbot
 	* `HEROKU_EMAIL` Heroku Account Email Id in which the above app will be deployed
 	* `HEROKU_API_KEY` Your Heroku API key, get it from https://dashboard.heroku.com/account
 	* `HEROKU_APP_NAME` Your Heroku app name, Name Must be unique
-	* `CONFIG_FILE_URL` Fill [This](https://raw.githubusercontent.com/vincreator/eunhamirror/master/config_sample.env) in any text editor, and remove the second line. Go to https://gist.github.com and paste your config data from the previous step. Rename the file to config.env and upload it. Click on Raw, copy the link and that's your CONFIG_FILE_URL. Refer to below images for clarity. 
+	* `CONFIG_FILE_URL` Fill [This](https://raw.githubusercontent.com/vincreator/eunhamirror/master/config_sample.env) in any text editor. Remove the `_____REMOVE_THIS_LINE_____=True` line and fill the variables. Go to https://gist.github.com and paste your config data. Rename the file to `config.env` then create secret gist. Click on Raw, copy the link. This will be your `CONFIG_FILE_URL`. Refer to below images for clarity. 
 
 	![steps 1 to 3](https://telegra.ph/file/1d8fec16516a87ba9d1ac.jpg)
 
 	![step 4](https://telegra.ph/file/1491f99836cd694ea1195.jpg)
 
 	![step 5](https://telegra.ph/file/416a550f7ded579b63272.jpg)
+
+- **NOTE**: Remove commit id from raw link to be able to change variables without updating the `CONFIG_FILE_URL` in secrets.
+  should be in this form: https://gist.githubusercontent.com/username/gist-id/raw/config.env
+  - Before: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/19ba5ab5eb43016422193319f28bc3c7dfb60f25/config.env
+  - After: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/config.env
+
+  - You only need to restart your bot after editing `config.env` gist secret.
 
 4. After adding all the above Required Variables go to Github Actions tab in your repo
 
@@ -297,6 +304,69 @@ sudo docker run mirrorbot
 
 ## Credits
 - [arghyac35](https://github.com/arghyac35) for Tutorial
+- [AkhileshNS](https://github.com/AkhileshNS) for Github workflow method to deploy Heroku app
+
+</details>
+
+## Deploy on Heroku with heroku-cli
+<details>
+    <summary><b>Click here for more details</b></summary>
+
+- Install [Heroku cli](https://devcenter.heroku.com/articles/heroku-cli)
+- Login into your heroku account with command:
+```
+heroku login
+```
+- Create a new heroku app:
+```
+heroku create appname
+```
+- Select This App in your Heroku-cli: 
+```
+heroku git:remote -a appname
+```
+- Change Dyno Stack to a Docker Container:
+```
+heroku stack:set container -a appname
+```
+- Clone this repo:
+```
+git clone https://github.com/vincreator/eunhamirror
+ls
+cd eunha
+```
+- get token [Read here](https://github.com/vincreator/eunhamirror#getting-google-oauth-api-credential-file)
+- get sa token (opsional) [Read here](https://github.com/vincreator/eunhamirror#generate-service-accounts)
+- Init the repo clone
+```
+git init
+```
+- Add all stuff:
+```
+git add .
+git add * -f
+git add .gitignore
+```
+- Commit new changes:
+```
+git commit -m "EunhaMirror Updates"
+```
+- Push Code to Heroku:
+```
+git push heroku master
+```
+- Restart Worker by these commands or you can Do it manually too in heroku.
+- For Turning off the Bot:
+```
+heroku ps:scale web=0 -a appname
+```
+- For Turning on the Bot:
+```
+heroku ps:scale web=1 -a appname
+```
+- **Note**:
+- Deploy 2 Times to unsuspend (Delete your apps and make it new with same name)
+- Don't add config on heroku, Use `config.env`
 
 </details>
 
