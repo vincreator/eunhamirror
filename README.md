@@ -256,8 +256,8 @@ sudo docker run mirrorbot
     
 ## Pre-requisites
 
-- [token.pickle](https://github.com/vincreator/eunhamirror#getting-google-oauth-api-credential-file)
-- [Heroku](heroku.com) accounts
+- [`token.pickle`](https://github.com/vincreator/eunhamirror#getting-google-oauth-api-credential-file)
+- [`Heroku`](https://heroku.com) accounts
 - Recommended to use 1 App in 1 Heroku account
 - Don't use bin/fake credits card, because your Heroku account will get banned.
 
@@ -271,9 +271,9 @@ sudo docker run mirrorbot
 
 3. Add the below Required Variables one by one by clicking `New Repository Secret` everytime.
 
-	* `HEROKU_API_KEY` Your Heroku API key, get it from https://dashboard.heroku.com/account
+	* `HEROKU_API_KEY` Your Heroku API key, get it from [`Dasboard Heroku`](https://dashboard.heroku.com/account)
 	* `HEROKU_APP_NAME` Your Heroku app name, Name Must be unique
-	* `CONFIG_FILE_URL` Fill [This](https://raw.githubusercontent.com/vincreator/eunhamirror/master/config_sample.env) in any text editor. Remove the `_____REMOVE_THIS_LINE_____=True` line and fill the variables. Go to https://gist.github.com and paste your config data. Rename the file to `config.env` then create secret gist. Click on Raw, copy the link. This will be your `CONFIG_FILE_URL`. Refer to below images for clarity. 
+	* `CONFIG_FILE_URL` Fill [`This`](https://raw.githubusercontent.com/vincreator/eunhamirror/master/config_sample.env) in any text editor. Remove the `_____REMOVE_THIS_LINE_____=True` line and fill the variables. Go to [`Gist`](https://gist.github.com) and paste your config data. Rename the file to `config.env` then create secret gist. Click on Raw, copy the link. This will be your `CONFIG_FILE_URL`. Refer to below images for clarity. 
 
 	![steps 1 to 3](https://telegra.ph/file/1d8fec16516a87ba9d1ac.jpg)
 
@@ -282,17 +282,16 @@ sudo docker run mirrorbot
 	![step 5](https://telegra.ph/file/416a550f7ded579b63272.jpg)
 
 - **NOTE**: Remove commit id from raw link to be able to change variables without updating the `CONFIG_FILE_URL` in secrets.
-  should be in this form: https://gist.githubusercontent.com/username/gist-id/raw/config.env
-  - Before: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/19ba5ab5eb43016422193319f28bc3c7dfb60f25/config.env
-  - After: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/config.env
-
+  should be in this form: `https://gist.githubusercontent.com/username/gist-id/raw/config.env`
+  - Before: `https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/19ba5ab5eb43016422193319f28bc3c7dfb60f25/config.env`
+  - After: `https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/config.env`
   - You only need to restart your bot after editing `config.env` gist secret.
 
 4. After adding all the above Required Variables go to Github Actions tab in your repo
 
-5. Select `Manually Deploy to Heroku` workflow as shown below:
+5. Select `Container` workflow as shown below:
 
-	![Example Manually Deploy to Heroku](https://telegra.ph/file/38ffda0165d9671f1d5dc.jpg)
+	![Container](https://telegra.ph/file/38ffda0165d9671f1d5dc.jpg)
 
 6. Then click on Run workflow
 
@@ -302,10 +301,11 @@ sudo docker run mirrorbot
 
 ## NOTE
 - Don't change/edit variables from Heroku if you want to change/edit do it from `config.env`
+- If got suspend apps after deploy just delete your apps and make it new with same name, then do `Container` again
 
 ## Credits
-- [arghyac35](https://github.com/arghyac35) for Tutorial
-- [Adek](https://github.com/adekmaulana) for Github workflow method to deploy Heroku app
+- [`arghyac35`](https://github.com/arghyac35) for Tutorial
+- [`Adek`](https://github.com/adekmaulana) for Github workflow method to deploy Heroku app
 
 </details>
 
@@ -371,7 +371,7 @@ heroku ps:scale web=1 -a appname
 
 </details>
 
-# Using Service Accounts for uploading to avoid user rate limit
+## Using Service Accounts for uploading to avoid user rate limit
 <details>
     <summary><b>Click here for more details</b></summary>
 
@@ -380,7 +380,8 @@ Many thanks to [AutoRClone](https://github.com/xyou365/AutoRclone) for the scrip
 **NOTE**: Using Service Accounts is only recommended while uploading to a Team Drive.
 </details>
 
-## Generate Service Accounts. [What is Service Account](https://cloud.google.com/iam/docs/service-accounts)
+## Generate Service Accounts.
+- [`What is Service Account`](https://cloud.google.com/iam/docs/service-accounts)
 <details>
     <summary><b>Click here for more details</b></summary>
 
@@ -467,12 +468,10 @@ this function is to turn on your bot so it doesn't fall asleep.
 
 choose one of these:
 
-- [Cron Job](https://cron-job.org) Just put your app link
-- [Uptime Robot](https://uptimerobot.com) Just put your app link
-- [Kaffeine](https://kaffeine.herokuapp.com) Just put your app link
-- [PingDom](https://pingdom.com) Just put your app link
-- [AddOn Newrelic](https://elements.heroku.com/addons/newrelic)
-- [AddOn Scheduler](https://elements.heroku.com/addons/scheduler)
+- [`Cron Job`](https://cron-job.org) Just put your app link
+- [`Uptime Robot`](https://uptimerobot.com) Just put your app link
+- [`Kaffeine`](https://kaffeine.herokuapp.com) Just put your app link
+- [`PingDom`](https://pingdom.com) Just put your app link
 
 </details>            
             
@@ -482,15 +481,15 @@ Thanks to:
 <details>
     <summary><b>Click here for more details</b></summary>
     
-- [out386](https://github.com/out386) heavily inspired from Telegram Bot which is written in JS
-- [Izzy12](https://github.com/lzzy12/) for original repo
-- [Dank-del](https://github.com/Dank-del/) for base repo
-- [magneto261290](https://github.com/magneto261290/) for some features
-- [SVR666](https://github.com/SVR666/) for some features & fixes
-- [anasty17](https://github.com/anasty17) for some features & help
-- [breakdowns](https://github.com/breakdowns) for slam-aria-mirror-bot
-- [zevtyardt](https://github.com/zevtyardt) for some direct links
+- [`out386`](https://github.com/out386) heavily inspired from Telegram Bot which is written in JS
+- [`Izzy12`](https://github.com/lzzy12/) for original repo
+- [`Dank-del`](https://github.com/Dank-del/) for base repo
+- [`magneto261290`](https://github.com/magneto261290/) for some features
+- [`SVR666`](https://github.com/SVR666/) for some features & fixes
+- [`anasty17`](https://github.com/anasty17) for some features & help
+- [`breakdowns`](https://github.com/breakdowns) for slam-aria-mirror-bot
+- [`zevtyardt`](https://github.com/zevtyardt) for some direct links
 
 </details>
 
-And many more people who aren't mentioned here, but may be found in [Contributors](https://github.com/vincreator/eunha/graphs/contributors).
+And many more people who aren't mentioned here, but may be found in [`Contributors`](https://github.com/vincreator/eunha/graphs/contributors).
