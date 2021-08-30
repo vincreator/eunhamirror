@@ -23,25 +23,20 @@
 <details>
     <summary><b>Click here for more details</b></summary>
 
-- Updater (**NOTE**: You must upload your **token.pickle** to Index and fill your **token.pickle** url to **TOKEN_PICKLE_URL**, because your **token.pickle** will deleted after update)
-- Limiting size Torrent/Direct, Tar/Unzip, Mega, cloning Google Drive support
-- Get detailed info about replied media (Only for Telegram file)
-- Stop duplicate cloning Google Drive & mirroring Mega support
+- Qbittorrent
+- Size limiting for Torrent/Direct, Tar/Unzip, Mega and clone
+- Stop duplicate for all except qbittorrent tasks
 - Tar/Unzip Google Drive link support
-- Speedtest with picture results
-- Sudo with Database support
+- Select files from Torrent before downloading using qbittorrent
+- Sudo with or without Database
 - Multiple Trackers support
-- Check Heroku dynos stats
-- Updater (Only for Heroku)
 - Extracting **tar.xz** support
-- Create Tar Google Drive folder
-- Custom image support
-- Custom Progress bar
-- Counting file/folder
-- Shell and Executor
+- Counting Google Drive link
 - View Link button
 - Shell and Executor
-- Qbittorrent supported
+- Speedtest
+- Status Pages for unlimited tasks
+- Clone status
 - Torrent search Supported:
 ```
 nyaa.si, sukebei, 1337x, piratebay,
@@ -207,7 +202,7 @@ sudo docker build . -t mirror-bot
 ```
 - Run the image:
 ```
-sudo docker run -p 80:80 mirrorbot
+sudo docker run -p 80:80 mirror-bot
 ```
 OR
 
@@ -245,9 +240,10 @@ sudo docker container prune
 ```
 sudo docker image prune -a
 ```
-</details>
+- Video from Tortoolkit repo
+<p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
-## [Video From Tortoolkit Repo](https://youtu.be/c8_TU1sPK08)
+</details>
 
 ## Deploying on Heroku with Github Workflows.
 <details>
