@@ -534,12 +534,14 @@ Thanks to:
     
 - [`out386`](https://github.com/out386) heavily inspired from Telegram Bot which is written in JS
 - [`Izzy12`](https://github.com/lzzy12/) for original repo
+- [`jaskaranSM`](https://github.com/jaskaranSM) for build up this bot from scratch
 - [`Dank-del`](https://github.com/Dank-del/) for base repo
 - [`magneto261290`](https://github.com/magneto261290/) for some features
 - [`SVR666`](https://github.com/SVR666/) for some features & fixes
 - [`anasty17`](https://github.com/anasty17) for some features & help
 - [`breakdowns`](https://github.com/breakdowns) for slam-aria-mirror-bot
 - [`zevtyardt`](https://github.com/zevtyardt) for some direct links
+- [`yash-dk`](https://github.com/yash-dk) for implementation qBittorrent on Python
 
 </details>
 
