@@ -241,7 +241,7 @@ class TorrentSearch:
         self.message = await message.reply_text("Searching")
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.source}/{query}") as resp:
+                async with session.get(f"{self.source}/{query}", timeout=15) as resp:
                     if (resp.status != 200):
                         raise Exception('unsuccessful request')
                     result = await resp.json()
@@ -315,15 +315,17 @@ RESULT_STR_ALL = (
     "➲Seeders: {Seeders} || ➲Leechers: {Leechers}"
 )
 
+TORRENT_API = 'https://api.eunhamirror.repl.co'
+
 torrents_dict = {
-    '1337x': {'source': "https://api.eunhamirror.repl.co/api/1337x/", 'result_str': RESULT_STR_1337},
-    'piratebay': {'source': "https://api.eunhamirror.repl.co/api/piratebay/", 'result_str': RESULT_STR_PIRATEBAY},
-    'tgx': {'source': "https://api.eunhamirror.repl.co/api/tgx/", 'result_str': RESULT_STR_TGX},
-    'yts': {'source': "https://api.eunhamirror.repl.co/api/yts/", 'result_str': RESULT_STR_YTS},
-    'eztv': {'source': "https://api.eunhamirror.repl.co/api/eztv/", 'result_str': RESULT_STR_EZTV},
-    'torlock': {'source': "https://api.eunhamirror.repl.co/api/torlock/", 'result_str': RESULT_STR_TORLOCK},
-    'rarbg': {'source': "https://api.eunhamirror.repl.co/api/rarbg/", 'result_str': RESULT_STR_RARBG},
-    'ts': {'source': "https://api.eunhamirror.repl.co/api/all/", 'result_str': RESULT_STR_ALL}
+    '1337x': {'source': f"{TORRENT_API}/api/1337x/", 'result_str': RESULT_STR_1337},
+    'piratebay': {'source': f"{TORRENT_API}/api/piratebay/", 'result_str': RESULT_STR_PIRATEBAY},
+    'tgx': {'source': f"{TORRENT_API}/api/tgx/", 'result_str': RESULT_STR_TGX},
+    'yts': {'source': f"{TORRENT_API}/api/yts/", 'result_str': RESULT_STR_YTS},
+    'eztv': {'source': f"{TORRENT_API}/api/eztv/", 'result_str': RESULT_STR_EZTV},
+    'torlock': {'source': f"{TORRENT_API}/api/torlock/", 'result_str': RESULT_STR_TORLOCK},
+    'rarbg': {'source': f"{TORRENT_API}/api/rarbg/", 'result_str': RESULT_STR_RARBG},
+    'ts': {'source': f"{TORRENT_API}/api/all/", 'result_str': RESULT_STR_ALL}
 }
 
 torrent_handlers = [
