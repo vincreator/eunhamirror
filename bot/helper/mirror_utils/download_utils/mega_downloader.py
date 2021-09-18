@@ -171,7 +171,7 @@ class MegaDownloadHelper:
             LOGGER.info('Checking File/Folder if already in Drive')
             mname = node.getName()
             if listener.isTar:
-                mname = mname + ".tar"
+                mname = mname + ".zip" if listener.isZip else mname + ".tar"
             if listener.extract:
                 smsg = None
             else:

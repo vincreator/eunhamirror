@@ -46,12 +46,14 @@ if CONFIG_FILE_URL is not None:
 
 load_dotenv('config.env')
 
+SERVER_PORT = os.environ.get('SERVER_PORT', None)
+PORT = os.environ.get('PORT', SERVER_PORT)
+web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
+time.sleep(1)
 alive = subprocess.Popen(["python3", "alive.py"])
-
 subprocess.run(["mkdir", "-p", "qBittorrent/config"])
 subprocess.run(["cp", "qBittorrent.conf", "qBittorrent/config/qBittorrent.conf"])
 subprocess.run(["qbittorrent-nox", "-d", "--profile=."])
-
 Interval = []
 DRIVES_NAMES = []
 DRIVES_IDS = []
@@ -156,7 +158,6 @@ try:
     if len(DB_URI) == 0:
         raise KeyError
 except KeyError:
-    logging.warning('Database not provided!')
     DB_URI = None
 if DB_URI is not None:
     try:
@@ -180,7 +181,7 @@ if DB_URI is not None:
         conn.close()
 
 LOGGER.info("Generating USER_SESSION_STRING")
-app = Client(':memory:', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN)
+app = Client('Eunha', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN)
 
 # Generate Telegraph Token
 sname = ''.join(random.SystemRandom().choices(string.ascii_letters, k=8))
@@ -211,15 +212,6 @@ except KeyError:
     logging.warning('MEGA Credentials not provided!')
     MEGA_EMAIL_ID = None
     MEGA_PASSWORD = None
-try:
-    HEROKU_API_KEY = getConfig('HEROKU_API_KEY')
-    HEROKU_APP_NAME = getConfig('HEROKU_APP_NAME')
-    if len(HEROKU_API_KEY) == 0 or len(HEROKU_APP_NAME) == 0:
-        HEROKU_API_KEY = None
-        HEROKU_APP_NAME = None
-except KeyError:
-    HEROKU_API_KEY = None
-    HEROKU_APP_NAME = None
 try:
     UPTOBOX_TOKEN = getConfig('UPTOBOX_TOKEN')
 except KeyError:
@@ -329,7 +321,7 @@ except KeyError:
 try:
     BASE_URL = getConfig('BASE_URL_OF_BOT')
     if len(BASE_URL) == 0:
-        BASE_URL = None
+        raise KeyError
 except KeyError:
     logging.warning('BASE_URL_OF_BOT not provided!')
     BASE_URL = None
@@ -339,13 +331,10 @@ try:
 except KeyError:
     IS_VPS = False
 try:
-    SERVER_PORT = getConfig('SERVER_PORT')
-    if len(SERVER_PORT) == 0:
-        SERVER_PORT = None
+    RECURSIVE_SEARCH = getConfig('RECURSIVE_SEARCH')
+    RECURSIVE_SEARCH = RECURSIVE_SEARCH.lower() == 'true'
 except KeyError:
-    if IS_VPS:
-        logging.warning('SERVER_PORT not provided!')
-    SERVER_PORT = None
+    RECURSIVE_SEARCH = False
 try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
     if len(TOKEN_PICKLE_URL) == 0:
@@ -405,7 +394,7 @@ if os.path.exists('drive_folder'):
                 DRIVES_IDS.append(temp[1])
                 DRIVES_NAMES.append(temp[0].replace("_", " "))
             except:
-                DRIVES_NAMES.append(None)
+                pass
             try:
                 INDEX_URLS.append(temp[2])
             except IndexError as e:
