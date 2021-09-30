@@ -16,7 +16,7 @@ from bot.helper.ext_utils.fs_utils import take_ss
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
-VIDEO_SUFFIXES = ("M4V", "MP4", "MOV", "FLV", "WMV", "3GP", "MPG", "WEBM", "MKV", "AVI")
+VIDEO_SUFFIXES = ("MKV", "MP4", "MOV", "WMV", "3GP", "MPG", "WEBM", "AVI", "FLV", "M4V")
 AUDIO_SUFFIXES = ("MP3", "M4A", "M4B", "FLAC", "WAV", "AIF", "OGG", "AAC", "DTS", "MID", "AMR", "MKA")
 IMAGE_SUFFIXES = ("JPG", "JPX", "PNG", "GIF", "WEBP", "CR2", "TIF", "BMP", "JXR", "PSD", "ICO", "HEIC")
 
@@ -45,35 +45,44 @@ class TgUploader:
         self.user_settings()
         for dirpath, subdir, files in sorted(os.walk(path)):
             for file in sorted(files):
+                if self.is_cancelled:
+                    return
                 up_path = os.path.join(dirpath, file)
-                self.upload_file(up_path, file)
+                self.upload_file(up_path, file, dirpath)
+                if self.is_cancelled:
+                    return
                 msgs_dict[file] = self.sent_msg.message_id
-                os.remove(up_path)
                 self.last_uploaded = 0
         LOGGER.info(f"Leech Done: {self.name}")
         self.__listener.onUploadComplete(self.name, None, msgs_dict, None, None)
 
-    def upload_file(self, up_path, file):
+    def upload_file(self, up_path, file, dirpath):
+        cap_mono = f"<code>{file}</code>"
         notMedia = False
         thumb = self.thumb
         try:
             if not self.as_doc:
                 duration = 0
                 if file.upper().endswith(VIDEO_SUFFIXES):
-                    width = 0
-                    height = 0
                     metadata = extractMetadata(createParser(up_path))
                     if metadata.has("duration"):
                         duration = metadata.get("duration").seconds
                     if thumb is None:
-                        thumb, width, height = take_ss(up_path, duration)
+                        thumb = take_ss(up_path)
+                    if self.is_cancelled:
+                        return
+                    if not file.upper().endswith(("MKV", "MP4")):
+                        file = os.path.splitext(file)[0] + '.mp4'
+                        new_path = os.path.join(dirpath, file)
+                        os.rename(up_path, new_path)
+                        up_path = new_path
                     self.sent_msg = self.sent_msg.reply_video(video=up_path,
                                                               quote=True,
-                                                              caption=file,
+                                                              caption=cap_mono,
                                                               parse_mode="html",
                                                               duration=duration,
-                                                              width=width,
-                                                              height=height,
+                                                              width=480,
+                                                              height=320,
                                                               thumb=thumb,
                                                               supports_streaming=True,
                                                               disable_notification=True,
@@ -88,7 +97,7 @@ class TgUploader:
                     artist = metadata.get("artist") if metadata.has("artist") else None
                     self.sent_msg = self.sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
-                                                              caption=file,
+                                                              caption=cap_mono,
                                                               parse_mode="html",
                                                               duration=duration,
                                                               performer=artist,
@@ -99,21 +108,28 @@ class TgUploader:
                 elif file.upper().endswith(IMAGE_SUFFIXES):
                     self.sent_msg = self.sent_msg.reply_photo(photo=up_path,
                                                               quote=True,
-                                                              caption=file,
+                                                              caption=cap_mono,
                                                               parse_mode="html",
-                                                              supports_streaming=True,
                                                               disable_notification=True,
                                                               progress=self.upload_progress)
                 else:
                     notMedia = True
             if self.as_doc or notMedia:
+                if file.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
+                    thumb = take_ss(up_path)
+                if self.is_cancelled:
+                    return
                 self.sent_msg = self.sent_msg.reply_document(document=up_path,
                                                              quote=True,
                                                              thumb=thumb,
-                                                             caption=file,
+                                                             caption=cap_mono,
                                                              parse_mode="html",
                                                              disable_notification=True,
                                                              progress=self.upload_progress)
+                if self.thumb is None and thumb is not None and os.path.lexists(thumb):
+                    os.remove(thumb)
+            if not self.is_cancelled:
+                os.remove(up_path)
         except FloodWait as f:
             LOGGER.info(f)
             time.sleep(f.x)
