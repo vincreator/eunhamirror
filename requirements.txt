@@ -1,12 +1,11 @@
 aiohttp
 anytree
 aria2p
-attrdict
 appdirs
+attrdict
 beautifulsoup4
 cloudscrape
 feedparser
-filesplit
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
@@ -15,11 +14,12 @@ hachoir
 js2py
 lk21
 lxml
-Pillow
+pillow
 psutil
 psycopg2-binary
 pybase64
 pyrogram
+pyshorteners
 python-dotenv
 python-magic
 python-telegram-bot
@@ -32,4 +32,3 @@ TgCrypto
 torrentool==1.1.0
 urllib3
 youtube_dl
-pyshorteners
