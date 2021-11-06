@@ -283,6 +283,8 @@ sudo docker image prune -a
 - [`token.pickle`](https://github.com/vincreator/eunhamirror#getting-google-oauth-api-credential-file)
 - [`Heroku`](https://heroku.com) accounts
 - Recommended to use 1 App in 1 Heroku account
+- **First before going to deployment,** you must create app on your heroku account [HERE](https://dashboard.heroku.com/new-app) Choose region by you like, Name should only contain lowercase letters, numbers, dashes, and must be unique.
+
 - Don't use bin/fake credits card, because your Heroku account will get banned.
 
 ## Deployment
@@ -296,7 +298,7 @@ sudo docker image prune -a
 3. Add the below Required Variables one by one by clicking `New Repository Secret` everytime.
 
 	* `HEROKU_API_KEY` Your Heroku API key, get it from [`Dasboard Heroku`](https://dashboard.heroku.com/account)
-	* `HEROKU_APP_NAME` Your Heroku app name, Name Must be unique
+	* `HEROKU_APP_NAME` See above, on Pre-requisites
 	* `CONFIG_FILE_URL` Fill [`This`](https://raw.githubusercontent.com/vincreator/eunhamirror/master/config_sample.env) in any text editor. Remove the `_____REMOVE_THIS_LINE_____=True` line and fill the variables. Go to [`Gist`](https://gist.github.com) and paste your config data. Rename the file to `config.env` then create secret gist. Click on Raw, copy the link. This will be your `CONFIG_FILE_URL`. Refer to below images for clarity. 
 
 	![steps 1 to 5](https://telegra.ph/file/ec56f647ee556e86f6c7d.png)
