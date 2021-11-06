@@ -24,6 +24,7 @@
     <summary><b>Click here for more details</b></summary>
 
 - qBittorrent
+- From youtube_dl switch to yt-dlp engine
 - Size limiting for Torrent/Direct, Tar/Unzip, Mega and clone
 - Stop duplicates for all tasks except for qBittorrent and youtube-dl tasks 
 - Tar/Unzip G-Drive link 
@@ -63,14 +64,14 @@ uptobox.com (Uptobox account must be premium), solidfiles.com
 - Mirroring Mega.nz links to Google Drive (If you have non-premium Mega account, it will limit download to 5GB per 6 hours)
 - Copy files from someone's Drive to your Drive (Using Autorclone)
 - Download/Upload progress, Speeds and ETAs
-- Mirror all Youtube-dl supported links
+- Mirror all yt-dlp supported links
 - Docker support
 - Uploading to Team Drive
 - Index Link support
 - Service Account support
 - Delete files from Drive
 - Shortener support
-- Custom Filename (Only for direct links, Telegram files and Youtube-dl. Not for Mega links and Torrents)
+- Custom Filename (Only for direct links, Telegram files and yt-dlp. Not for Mega links and Torrents)
 - Extracting and downloading password protected index links. See these examples:
 <p><a href="https://telegra.ph/Magneto-Python-Aria---Custom-Filename-Examples-01-20"> <img src="https://img.shields.io/badge/See%20Telegraph-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
 
@@ -522,6 +523,13 @@ For Index Link with only password without username, even http auth will not work
 ```
 machine example.workers.dev password index_password
 ```
+
+**NOTE**: Since this bot using yt-dlp. 
+```
+.netrc maybe not working at all, but if you using netrc you can notice some warning
+say about using cookies option maybe since youtube have been slightly changed
+```
+
 Where host is the name of extractor (eg. Youtube, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
 
 </details>
