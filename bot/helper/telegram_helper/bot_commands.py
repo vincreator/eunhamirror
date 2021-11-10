@@ -46,5 +46,7 @@ class _BotCommands:
         self.LeechWatchCommand = 'leechwatch'
         self.LeechTarWatchCommand = 'leechtarwatch'
         self.LeechZipWatchCommand = 'leechzipwatch'
+        self.RebootCommand = 'reboot'
+        self.ShutdownCommand = 'shutdown'
 
 BotCommands = _BotCommands()

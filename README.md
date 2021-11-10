@@ -39,6 +39,7 @@
 - Status Pages for unlimited tasks
 - Clone status
 - Search in multiple Drive folder/TD
+- Restart and Shutdown Dyno
 - Many bugs has been fixed
 - Torrent search Supported:
 ```
@@ -175,6 +176,10 @@ exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st,
 
 Above are the supported url Shorteners. Except these only some url Shorteners are supported.
 
+- `HEROKU_API` : Heroku api account, get it from [here](https://dashboard.heroku.com/account).
+- `HEROKU_APP` : Heroku app name.
+
+**NOTE: if you don't use heroku leave it blank**
 ### Add more buttons (Optional Field)
 Three buttons are already added of Drive Link, Index Link, and View Link, you can add extra buttons, these are optional, if you don't know what are below entries, simply leave them, don't fill anything in them.
 - `BUTTON_FOUR_NAME`:

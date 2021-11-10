@@ -17,7 +17,7 @@ from bot.helper.telegram_helper.message_utils import *
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 from .helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper import button_build
-from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, torrent_search, delete, speedtest, count, leech_settings
+from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, torrent_search, delete, speedtest, count, leech_settings, reboot
 
 
 def stats(update, context):
@@ -152,6 +152,10 @@ help_string_telegraph = f'''<br>
 <b>/{BotCommands.StatusCommand}</b>: Shows a status of all the downloads
 <br><br>
 <b>/{BotCommands.StatsCommand}</b>: Show Stats of the machine the bot is hosted on
+<br><br>
+<b>/{BotCommands.RebootCommand}</b>: Restart dyno (Owner access, Heroku user)
+<br><br>
+<b>/{BotCommands.ShutdownCommand}</b>: Turn off a Dyno  (Owner access, Heroku user)
 '''
 help = Telegraph(access_token=telegraph_token).create_page(
         title='EunhaMirror Help',
@@ -233,7 +237,7 @@ def main():
         os.remove(".restartmsg")
     elif OWNER_ID:
         try:
-            text = "<b>Bot Restarted!</b>"
+            text = "<b>Bot Restarted!</b>\n\n<u>All Downloads stopping</u>\n<u>Re-mirroring if your task is cancelled</u>"
             bot.sendMessage(chat_id=OWNER_ID, text=text, parse_mode=ParseMode.HTML)
             if AUTHORIZED_CHATS:
                 for i in AUTHORIZED_CHATS:

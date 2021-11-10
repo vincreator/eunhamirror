@@ -398,6 +398,16 @@ try:
 except KeyError:
     pass
 
+try:
+    HEROKU_API = getConfig('HEROKU_API')
+    HEROKU_APP = getConfig('HEROKU_APP')
+    if len(HEROKU_API) == 0 or len(HEROKU_APP) == 0:
+        HEROKU_API = None
+        HEROKU_APP = None
+except KeyError:
+    HEROKU_API = None
+    HEROKU_APP = None
+
 DRIVES_NAMES.append("Main")
 DRIVES_IDS.append(parent_id)
 if os.path.exists('drive_folder'):
