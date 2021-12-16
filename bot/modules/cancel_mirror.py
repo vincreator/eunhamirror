@@ -3,7 +3,7 @@ from bot import download_dict, dispatcher, download_dict_lock, DOWNLOAD_DIR
 from bot.helper.ext_utils.fs_utils import clean_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import *
+from bot.helper.telegram_helper.message_utils import sendMessage
 
 from time import sleep
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus, getAllDownload
@@ -27,20 +27,12 @@ def cancel_mirror(update, context):
                 dl = download_dict[mirror_message.message_id]
             except:
                 pass
-    if len(args) == 1:
-        msg = f"Please reply to the <code>/{BotCommands.MirrorCommand}</code> message which was used to start the download or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
-        if mirror_message and mirror_message.message_id not in keys:
-            if BotCommands.MirrorCommand in mirror_message.text or \
-               BotCommands.TarMirrorCommand in mirror_message.text or \
-               BotCommands.UnzipMirrorCommand in mirror_message.text:
-                msg1 = "Mirror Already Have Been Cancelled"
-                sendMessage(msg1, context.bot, update)
-            else:
-                sendMessage(msg, context.bot, update)
-            return
-        elif not mirror_message:
-            sendMessage(msg, context.bot, update)
-            return
+    if len(args) == 1 and (
+        not mirror_message or mirror_message.message_id not in keys
+    ):
+        msg = f"Reply to active <code>/{BotCommands.MirrorCommand}</code> message which was used to start the download or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
+        sendMessage(msg, context.bot, update)
+        return
     if dl.status() == MirrorStatus.STATUS_ARCHIVING:
         sendMessage("Archival in Progress, You Can't Cancel It.", context.bot, update)
     elif dl.status() == MirrorStatus.STATUS_EXTRACTING:

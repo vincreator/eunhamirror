@@ -1,8 +1,4 @@
-# Implement By - @anasty17 (https://github.com/breakdowns/slam-tg-mirror-bot/commit/0bfba523f095ab1dccad431d72561e0e002e7a59)
-# (c) https://github.com/breakdowns/slam-aria-mirror-bot
-# All rights reserved
-
-from bot import DOWNLOAD_DIR, LOGGER, get_client
+from bot import DOWNLOAD_DIR, LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from .status import Status
 from time import sleep
@@ -54,12 +50,16 @@ class QbDownloadStatus(Status):
 
     def status(self):
         download = self.torrent_info().state
-        if download == "queuedDL":
+        if download in ["queuedDL", "queuedUP"]:
             return MirrorStatus.STATUS_WAITING
         elif download in ["metaDL", "checkingResumeData"]:
             return MirrorStatus.STATUS_DOWNLOADING + " (Metadata)"
         elif download == "pausedDL":
             return MirrorStatus.STATUS_PAUSE
+        elif download in ["checkingUP", "checkingDL"]:
+            return MirrorStatus.STATUS_CHECKING
+        elif download in ["stalledUP", "uploading", "forcedUP"]:
+            return MirrorStatus.STATUS_SEEDING
         else:
             return MirrorStatus.STATUS_DOWNLOADING
 
@@ -79,5 +79,6 @@ class QbDownloadStatus(Status):
         LOGGER.info(f"Cancelling Download: {self.name()}")
         self.client.torrents_pause(torrent_hashes=self.__hash)
         sleep(0.3)
-        self.listener.onDownloadError('Download stopped by user!')
-        self.client.torrents_delete(torrent_hashes=self.__hash)
+        if self.status() != MirrorStatus.STATUS_SEEDING:
+            self.listener.onDownloadError('Download stopped by user!')
+            self.client.torrents_delete(torrent_hashes=self.__hash)

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # (c) YashDK [yash-dk@github]
+# Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
 
-import os
-import time
 import logging
 import qbittorrentapi as qba
 import asyncio
@@ -25,7 +24,7 @@ page = """
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Torrent File Selector</title>
-    <link rel="icon" href="https://telegra.ph/file/6507910fd06d18dfaba82.jpg" type="image/jpg">
+    <link rel="icon" href="https://telegra.ph/file/cc06d0c613491080cc174.png" type="image/jpg">
     <script
       src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
       integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
@@ -81,7 +80,7 @@ header:hover, section:hover{
     align-items: center;
 }
 
-img{ 
+img{
     width: 2.5rem;
     height: 2.5rem;
     border: 2px solid black;
@@ -185,11 +184,11 @@ input[type="submit"]:hover, input[type="submit"]:focus{
         width: 100%;
     }
 }
-  
+
 #treeview .parent {
     position: relative;
 }
-  
+
 #treeview .parent > ul {
     display: none;
 }
@@ -298,7 +297,7 @@ $('input[type="checkbox"]').change(function(e) {
       let returnValue = all = ($(this).children('input[type="checkbox"]').prop("checked") === checked);
       return returnValue;
     });
-    
+
     if (all && checked) {
       parent.children('input[type="checkbox"]').prop({
         indeterminate: false,
@@ -330,7 +329,7 @@ code_page = """
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Torrent Code Checker</title>
-    <link rel="icon" href="https://telegra.ph/file/39a1878efeeb15b15633c.jpg" type="image/jpg"> 
+    <link rel="icon" href="https://telegra.ph/file/39a1878efeeb15b15633c.jpg" type="image/jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -379,7 +378,7 @@ header:hover, section:hover{
     align-items: center;
 }
 
-img{ 
+img{
     width: 2.5rem;
     height: 2.5rem;
     border: 2px solid black;
@@ -545,7 +544,7 @@ section span{
           <input
             type="text"
             name="pin_code"
-            placeholder="Enter the code that you have got from telegram to access the torrent"
+            placeholder="Enter the code that you have got from Telegram to access the Torrent"
           />
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
@@ -558,32 +557,26 @@ section span{
 </html>
 """
 
-
-@routes.get('/eunha/files/{hash_id}')
+@routes.get('/app/files/{hash_id}')
 async def list_torrent_contents(request):
 
     torr = request.match_info["hash_id"]
-
     gets = request.query
 
     if "pin_code" not in gets.keys():
-        rend_page = code_page.replace("{form_url}", f"/eunha/files/{torr}")
+        rend_page = code_page.replace("{form_url}", f"/app/files/{torr}")
         return web.Response(text=rend_page, content_type='text/html')
 
-    client = qba.Client(host="localhost", port="8090",
-                        username="admin", password="adminadmin")
-    client.auth_log_in()
+    client = qba.Client(host="localhost", port="8090")
     try:
         res = client.torrents_files(torrent_hash=torr)
     except qba.NotFound404Error:
         raise web.HTTPNotFound()
-    count = 0
     passw = ""
     for n in str(torr):
         if n.isdigit():
             passw += str(n)
-            count += 1
-        if count == 4:
+        if len(passw) == 4:
             break
     if isinstance(passw, bool):
         raise web.HTTPNotFound()
@@ -597,11 +590,9 @@ async def list_torrent_contents(request):
     nodes.create_list(par, cont)
 
     rend_page = page.replace("{My_content}", cont[0])
-    rend_page = rend_page.replace(
-        "{form_url}", f"/eunha/files/{torr}?pin_code={pincode}")
+    rend_page = rend_page.replace("{form_url}", f"/app/files/{torr}?pin_code={pincode}")
     client.auth_log_out()
     return web.Response(text=rend_page, content_type='text/html')
-
 
 async def re_verfiy(paused, resumed, client, torr):
 
@@ -618,9 +609,7 @@ async def re_verfiy(paused, resumed, client, torr):
         verify = True
 
         for i in res:
-            if str(i.id) in paused:
-                if i.priority == 0:
-                    continue
+            if str(i.id) in paused and i.priority != 0:
                 verify = False
                 break
 
@@ -632,34 +621,28 @@ async def re_verfiy(paused, resumed, client, torr):
             break
         LOGGER.info("Reverification Failed: correcting stuff...")
         client.auth_log_out()
-        client = qba.Client(host="localhost", port="8090",
-                           username="admin", password="adminadmin")
-        client.auth_log_in()
+        await asyncio.sleep(1)
+        client = qba.Client(host="localhost", port="8090")
         try:
-            client.torrents_file_priority(
-                torrent_hash=torr, file_ids=paused, priority=0)
+            client.torrents_file_priority(torrent_hash=torr, file_ids=paused, priority=0)
         except:
             LOGGER.error("Errored in reverification paused")
         try:
-            client.torrents_file_priority(
-                torrent_hash=torr, file_ids=resumed, priority=1)
+            client.torrents_file_priority(torrent_hash=torr, file_ids=resumed, priority=1)
         except:
             LOGGER.error("Errored in reverification resumed")
-        client.auth_log_out()
         k += 1
-        if k > 4:
+        if k > 5:
             return False
+    client.auth_log_out()
     LOGGER.info("Verified")
     return True
 
-
-@routes.post('/eunha/files/{hash_id}')
+@routes.post('/app/files/{hash_id}')
 async def set_priority(request):
 
     torr = request.match_info["hash_id"]
-    client = qba.Client(host="localhost", port="8090",
-                        username="admin", password="adminadmin")
-    client.auth_log_in()
+    client = qba.Client(host="localhost", port="8090")
 
     data = await request.post()
     resume = ""
@@ -679,16 +662,14 @@ async def set_priority(request):
     resume = resume.strip("|")
 
     try:
-        client.torrents_file_priority(
-            torrent_hash=torr, file_ids=pause, priority=0)
+        client.torrents_file_priority(torrent_hash=torr, file_ids=pause, priority=0)
     except qba.NotFound404Error:
         raise web.HTTPNotFound()
     except:
         LOGGER.error("Errored in paused")
 
     try:
-        client.torrents_file_priority(
-            torrent_hash=torr, file_ids=resume, priority=1)
+        client.torrents_file_priority(torrent_hash=torr, file_ids=resume, priority=1)
     except qba.NotFound404Error:
         raise web.HTTPNotFound()
     except:
@@ -697,7 +678,6 @@ async def set_priority(request):
     await asyncio.sleep(2)
     if not await re_verfiy(pause, resume, client, torr):
         LOGGER.error("Verification Failed")
-    client.auth_log_out()
     return await list_torrent_contents(request)
 
 
@@ -705,8 +685,7 @@ async def set_priority(request):
 async def homepage(request):
 
     return web.Response(text="<h1>See Eunha-Mirror-bot  <a href='https://github.com/vincreator/Eunha-Mirror-bot'>@GitHub</a> By <a href='https://github.com/vincreator'>ovin</a></h1>", content_type="text/html")
-
-
+    
 async def e404_middleware(app, handler):
 
     async def middleware_handler(request):
@@ -714,11 +693,11 @@ async def e404_middleware(app, handler):
         try:
             response = await handler(request)
             if response.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>slam-mirrorbot</h3>", content_type="text/html")
+                return web.Response(text="<h1>404: Page not found</h2><br><h3>Eunha-Mirror-bot</h3>", content_type="text/html")
             return response
         except web.HTTPException as ex:
             if ex.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>slam-mirrorbot</h3>", content_type="text/html")
+                return web.Response(text="<h1>404: Page not found</h2><br><h3>Eunha-Mirror-bot</h3>", content_type="text/html")
             raise
     return middleware_handler
 
@@ -727,7 +706,6 @@ async def start_server():
     app = web.Application(middlewares=[e404_middleware])
     app.add_routes(routes)
     return app
-
 
 async def start_server_async(port=80):
 

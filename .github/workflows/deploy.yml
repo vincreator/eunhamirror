@@ -9,7 +9,7 @@ env:
   CONFIG_FILE_URL: ${{ secrets.CONFIG_FILE_URL }}
 
 jobs:
-  build_and_push:
+  build:
     runs-on: ubuntu-latest
 
     steps:

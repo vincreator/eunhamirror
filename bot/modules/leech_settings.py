@@ -1,6 +1,4 @@
-# Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/commit/d888a1e7237f4633c066f7c2bbfba030b83ad616)
-# (c) https://github.com/SlamDevs/slam-mirrorbot
-# All rights reserved
+# Leech Settings V2 Implement By - @VarnaX-279
 
 import os
 import threading
@@ -10,94 +8,101 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 
 from bot import AS_DOC_USERS, AS_MEDIA_USERS, dispatcher, AS_DOCUMENT, app, AUTO_DELETE_MESSAGE_DURATION
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, auto_delete_message
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, auto_delete_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper import button_build
 
 
-def leechSet(update, context):
-    user_id = update.message.from_user.id
-    path = f"Thumbnails/{user_id}.jpg"
-    msg = f"Leech Type for {user_id} user is "
+def getleechinfo(from_user):
+    user_id = from_user.id
+    name = from_user.full_name
+    buttons = button_build.ButtonMaker()
+    thumbpath = f"Thumbnails/{user_id}.jpg"
     if (
         user_id in AS_DOC_USERS
         or user_id not in AS_MEDIA_USERS
         and AS_DOCUMENT
     ):
-        msg += "DOCUMENT"
+        ltype = "DOCUMENT"
+        buttons.sbutton("Send As Media", f"med {user_id}")
     else:
-        msg += "MEDIA"
-    msg += "\nCustom Thumbnail "
-    msg += "exists" if os.path.exists(path) else "not exists"
-    buttons = button_build.ButtonMaker()
-    buttons.sbutton("As Document", f"doc {user_id}")
-    buttons.sbutton("As Media", f"med {user_id}")
-    buttons.sbutton("Delete Thumbnail", f"thumb {user_id}")
+        ltype = "MEDIA"
+        buttons.sbutton("Send As Document", f"doc {user_id}")
+
+    if os.path.exists(thumbpath):
+        thumbmsg = "Exists"
+        buttons.sbutton("Delete Thumbnail", f"thumb {user_id}")
+    else:
+        thumbmsg = "Not Exists"
+
     if AUTO_DELETE_MESSAGE_DURATION == -1:
         buttons.sbutton("Close", f"closeset {user_id}")
-    button = InlineKeyboardMarkup(buttons.build_menu(2))
+
+    button = InlineKeyboardMarkup(buttons.build_menu(1))
+
+    text = f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
+           f"Leech Type <b>{ltype}</b>\n"\
+           f"Custom Thumbnail <b>{thumbmsg}</b>"
+    return text, button
+
+def editLeechType(message, query):
+    msg, button = getleechinfo(query.from_user)
+    editMessage(msg, message, button)
+
+def leechSet(update, context):
+    msg, button = getleechinfo(update.message.from_user)
     choose_msg = sendMarkup(msg, context.bot, update, button)
     threading.Thread(target=auto_delete_message, args=(context.bot, update.message, choose_msg)).start()
 
 def setLeechType(update, context):
     query = update.callback_query
+    message = query.message
     user_id = query.from_user.id
     data = query.data
     data = data.split(" ")
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[0] == "doc":
-        if (
-            user_id in AS_DOC_USERS
-            or user_id not in AS_MEDIA_USERS
-            and AS_DOCUMENT
-        ):
-            query.answer(text="Already As Document!", show_alert=True)
-        elif user_id in AS_MEDIA_USERS:
+        if user_id in AS_MEDIA_USERS:
             AS_MEDIA_USERS.remove(user_id)
-            AS_DOC_USERS.add(user_id)
-            query.answer(text="Done!", show_alert=True)
-        else:
-            AS_DOC_USERS.add(user_id)
-            query.answer(text="Done!", show_alert=True)
+        AS_DOC_USERS.add(user_id)
+        query.answer(text="Your File Will Deliver As Document!", show_alert=True)
+        editLeechType(message, query)
     elif data[0] == "med":
         if user_id in AS_DOC_USERS:
             AS_DOC_USERS.remove(user_id)
-            AS_MEDIA_USERS.add(user_id)
-            query.answer(text="Done!", show_alert=True)
-        elif user_id in AS_MEDIA_USERS or not AS_DOCUMENT:
-            query.answer(text="Already As Media!", show_alert=True)
-        else:
-            AS_MEDIA_USERS.add(user_id)
-            query.answer(text="Done!", show_alert=True)
+        AS_MEDIA_USERS.add(user_id)
+        query.answer(text="Your File Will Deliver As Media!", show_alert=True)
+        editLeechType(message, query)
     elif data[0] == "thumb":
         path = f"Thumbnails/{user_id}.jpg"
         if os.path.lexists(path):
             os.remove(path)
-            query.answer(text="Done!", show_alert=True)
+            query.answer(text="Thumbnail Removed!", show_alert=True)
+            editLeechType(message, query)
         else:
-            query.answer(text="No Thumbnail To Delete!", show_alert=True)
+            query.answer(text="Old Settings", show_alert=True)
     elif data[0] == "closeset":
-        query.message.delete()
+        try:
+            query.message.delete()
+            query.message.reply_to_message.delete()
+        except:
+            pass
 
 def setThumb(update, context):
     user_id = update.message.from_user.id
     reply_to = update.message.reply_to_message
     if reply_to is not None and reply_to.photo:
-        path = "Thumbnails"
-        if not os.path.exists(path):
+        path = "Thumbnails/"
+        if not os.path.isdir(path):
             os.mkdir(path)
         photo_msg = app.get_messages(update.message.chat.id, reply_to_message_ids=update.message.message_id)
         photo_dir = app.download_media(photo_msg, file_name=path)
         des_dir = os.path.join(path, str(user_id) + ".jpg")
-        # Image.open(photo_dir).convert("RGB").save(photo_dir)
-        img = Image.open(photo_dir)
-        img.thumbnail((480, 320))
-        # img.resize((480, 320))
-        img.save(des_dir, "JPEG")
+        Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
         os.remove(photo_dir)
-        sendMessage(f"Custom thumbnail saved for <code>{user_id}</code> user.", context.bot, update)
+        sendMessage(f"Custom thumbnail saved for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a> .", context.bot, update)
     else:
         sendMessage("Reply to a photo to save custom thumbnail.", context.bot, update)
 
