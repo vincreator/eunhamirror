@@ -6,29 +6,31 @@ from time import sleep
 
 class QbDownloadStatus(Status):
 
-    def __init__(self, gid, listener, qbhash, client):
-        super().__init__()
+    def __init__(self, listener, client, gid, qbhash, select):
         self.__gid = gid
         self.__hash = qbhash
-        self.client = client
+        self.__select = select
+        self.__client = client
+        self.__listener = listener
         self.__uid = listener.uid
-        self.listener = listener
         self.message = listener.message
-
 
     def progress(self):
         """
         Calculates the progress of the mirror (upload or download)
         :return: returns progress in percentage
         """
-        return f'{round(self.torrent_info().progress*100,2)}%'
+        return f'{round(self.torrent_info().progress*100, 2)}%'
 
     def size_raw(self):
         """
         Gets total size of the mirror file/folder
         :return: total size of mirror
         """
-        return self.torrent_info().size
+        if self.__select:
+            return self.torrent_info().size
+        else:
+            return self.torrent_info().total_size
 
     def processed_bytes(self):
         return self.torrent_info().downloaded
@@ -54,7 +56,7 @@ class QbDownloadStatus(Status):
             return MirrorStatus.STATUS_WAITING
         elif download in ["metaDL", "checkingResumeData"]:
             return MirrorStatus.STATUS_DOWNLOADING + " (Metadata)"
-        elif download == "pausedDL":
+        elif download in ["pausedDL", "pausedUP"]:
             return MirrorStatus.STATUS_PAUSE
         elif download in ["checkingUP", "checkingDL"]:
             return MirrorStatus.STATUS_CHECKING
@@ -64,7 +66,7 @@ class QbDownloadStatus(Status):
             return MirrorStatus.STATUS_DOWNLOADING
 
     def torrent_info(self):
-        return self.client.torrents_info(torrent_hashes=self.__hash)[0]
+        return self.__client.torrents_info(torrent_hashes=self.__hash)[0]
 
     def download(self):
         return self
@@ -75,10 +77,19 @@ class QbDownloadStatus(Status):
     def gid(self):
         return self.__gid
 
+    def client(self):
+        return self.__client
+
+    def listener(self):
+        return self.__listener
+
     def cancel_download(self):
-        LOGGER.info(f"Cancelling Download: {self.name()}")
-        self.client.torrents_pause(torrent_hashes=self.__hash)
-        sleep(0.3)
-        if self.status() != MirrorStatus.STATUS_SEEDING:
-            self.listener.onDownloadError('Download stopped by user!')
-            self.client.torrents_delete(torrent_hashes=self.__hash)
+        if self.status() == MirrorStatus.STATUS_SEEDING:
+            LOGGER.info(f"Cancelling Seed: {self.name()}")
+            self.__client.torrents_pause(torrent_hashes=self.__hash)
+        else:
+            LOGGER.info(f"Cancelling Download: {self.name()}")
+            self.__client.torrents_pause(torrent_hashes=self.__hash)
+            sleep(0.3)
+            self.__listener.onDownloadError('Download stopped by user!')
+            self.__client.torrents_delete(torrent_hashes=self.__hash)

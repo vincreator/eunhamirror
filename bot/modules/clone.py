@@ -19,8 +19,16 @@ def cloneNode(update, context):
     reply_to = update.message.reply_to_message
     if len(args) > 1:
         link = args[1]
+        if update.message.from_user.username:
+            tag = f"@{update.message.from_user.username}"
+        else:
+            tag = update.message.from_user.mention_html(update.message.from_user.first_name)
     elif reply_to is not None:
         link = reply_to.text
+        if reply_to.from_user.username:
+            tag = f"@{reply_to.from_user.username}"
+        else:
+            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
     else:
         link = ''
     gdtot_link = is_gdtot_link(link)
@@ -36,8 +44,7 @@ def cloneNode(update, context):
         gd = gdriveTools.GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
         if res != "":
-            sendMessage(res, context.bot, update)
-            return
+            return sendMessage(res, context.bot, update)
         if STOP_DUPLICATE:
             LOGGER.info('Checking File/Folder if already in Drive...')
             smsg, button = gd.drive_list(name, True, True)
@@ -51,8 +58,7 @@ def cloneNode(update, context):
             LOGGER.info('Checking File/Folder Size...')
             if size > CLONE_LIMIT * 1024**3:
                 msg2 = f'Failed, Clone limit is {CLONE_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
-                sendMessage(msg2, context.bot, update)
-                return
+                return sendMessage(msg2, context.bot, update)
         if files <= 10:
             msg = sendMessage(f"Cloning: <code>{link}</code>", context.bot, update)
             result, button = gd.clone(link)
@@ -77,15 +83,9 @@ def cloneNode(update, context):
                     update_all_messages()
             except IndexError:
                 pass
-        if update.message.from_user.username:
-            uname = f'@{update.message.from_user.username}'
-        else:
-            uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
-        if uname is not None:
-            cc = f'\n\n<b>cc: </b>{uname}'
-            men = f'{uname} '
+        cc = f'\n\n<b>cc: </b>{tag}'
         if button in ["cancelled", ""]:
-            sendMessage(men + result, context.bot, update)
+            sendMessage(f"{tag} {result}", context.bot, update)
         else:
             sendMarkup(result + cc, context.bot, update, button)
         if gdtot_link:
@@ -93,5 +93,5 @@ def cloneNode(update, context):
     else:
         sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', context.bot, update)
 
-clone_handler = CommandHandler(BotCommands.CloneCommand, cloneNode, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+clone_handler = CommandHandler(BotCommands.CloneCommand, cloneNode, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 dispatcher.add_handler(clone_handler)

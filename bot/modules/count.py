@@ -15,8 +15,16 @@ def countNode(update, context):
     reply_to = update.message.reply_to_message
     if len(args) > 1:
         link = args[1]
+        if update.message.from_user.username:
+            tag = f"@{update.message.from_user.username}"
+        else:
+            tag = update.message.from_user.mention_html(update.message.from_user.first_name)
     elif reply_to is not None:
         link = reply_to.text
+        if reply_to.from_user.username:
+            tag = f"@{reply_to.from_user.username}"
+        else:
+            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
     else:
         link = ''
     gdtot_link = is_gdtot_link(link)
@@ -30,17 +38,12 @@ def countNode(update, context):
         gd = GoogleDriveHelper()
         result = gd.count(link)
         deleteMessage(context.bot, msg)
-        if update.message.from_user.username:
-            uname = f'@{update.message.from_user.username}'
-        else:
-            uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
-        if uname is not None:
-            cc = f'\n\n<b>cc: </b>{uname}'
+        cc = f'\n\n<b>cc: </b>{tag}'
         sendMessage(result + cc, context.bot, update)
         if gdtot_link:
             gd.deletefile(link)
     else:
         sendMessage('Send Gdrive link along with command or by replying to the link by command', context.bot, update)
 
-count_handler = CommandHandler(BotCommands.CountCommand, countNode, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+count_handler = CommandHandler(BotCommands.CountCommand, countNode, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 dispatcher.add_handler(count_handler)
