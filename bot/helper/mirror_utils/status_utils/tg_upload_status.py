@@ -1,13 +1,8 @@
-# Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/commit/d888a1e7237f4633c066f7c2bbfba030b83ad616)
-# (c) https://github.com/SlamDevs/slam-mirrorbot
-# All rights reserved
-
-from .status import Status
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from bot import DOWNLOAD_DIR
 
 
-class TgUploadStatus(Status):
+class TgUploadStatus:
     def __init__(self, obj, size, gid, listener):
         self.__obj = obj
         self.__size = size
@@ -46,7 +41,7 @@ class TgUploadStatus(Status):
         """
         :return: Upload speed in Bytes/Seconds
         """
-        return self.__obj.speed()
+        return self.__obj.speed
 
     def speed(self):
         return f'{get_readable_file_size(self.speed_raw())}/s'

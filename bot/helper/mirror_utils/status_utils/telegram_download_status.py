@@ -1,16 +1,16 @@
 from bot import DOWNLOAD_DIR
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
-from .status import Status
 
 
-class TelegramDownloadStatus(Status):
-    def __init__(self, obj, listener):
+class TelegramDownloadStatus:
+    def __init__(self, obj, listener, gid):
         self.__obj = obj
         self.__uid = listener.uid
+        self.__gid = gid
         self.message = listener.message
 
     def gid(self):
-        return self.__obj.gid
+        return self.__gid
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"

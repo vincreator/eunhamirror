@@ -1,5 +1,4 @@
-import threading
-
+from threading import Thread
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
@@ -12,9 +11,7 @@ from bot.helper.telegram_helper import button_build
 
 def list_buttons(update, context):
     user_id = update.message.from_user.id
-    try:
-        key = update.message.text.split(" ", maxsplit=1)[1]
-    except IndexError:
+    if len(update.message.text.split(" ", maxsplit=1)) < 2:
         return sendMessage('Send a search key along with command', context.bot, update)
     buttons = button_build.ButtonMaker()
     buttons.sbutton("Drive Root", f"types {user_id} root")
@@ -46,7 +43,7 @@ def select_type(update, context):
         list_method = data[3]
         item_type = data[2]
         editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
-        threading.Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
+        Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
     else:
         query.answer()
         editMessage("list has been canceled!", msg)

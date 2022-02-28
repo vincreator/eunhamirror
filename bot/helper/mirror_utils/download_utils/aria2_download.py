@@ -1,38 +1,53 @@
-import threading
-
 from time import sleep
+from threading import Thread
 
-from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER
+from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER, STORAGE_THRESHOLD
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage
+from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
 
 
 @new_thread
 def __onDownloadStarted(api, gid):
-    if STOP_DUPLICATE or TORRENT_DIRECT_LIMIT is not None or ZIP_UNZIP_LIMIT is not None:
-        sleep(1.5)
-        dl = getDownloadByGid(gid)
-        download = api.get_download(gid)
-        try:
-            if STOP_DUPLICATE and dl is not None and not dl.getListener().isLeech:
+    try:
+        if any([STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD]):
+            sleep(1.5)
+            dl = getDownloadByGid(gid)
+            if dl is None:
+                return
+            download = api.get_download(gid)
+            if STOP_DUPLICATE and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')
                 sname = download.name
                 if dl.getListener().isZip:
                     sname = sname + ".zip"
-                if not dl.getListener().extract:
-                    gdrive = GoogleDriveHelper()
-                    smsg, button = gdrive.drive_list(sname, True)
+                elif dl.getListener().extract:
+                    try:
+                        sname = get_base_name(sname)
+                    except:
+                        sname = None
+                if sname is not None:
+                    smsg, button = GoogleDriveHelper().drive_list(sname, True)
                     if smsg:
                         dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
-                        api.remove([download], force=True)
-                        sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
-                        return
-            if dl is not None and (ZIP_UNZIP_LIMIT is not None or TORRENT_DIRECT_LIMIT is not None):
+                        api.remove([download], force=True, files=True)
+                        return sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
+            if any([ZIP_UNZIP_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]):
                 sleep(1)
                 limit = None
-                if ZIP_UNZIP_LIMIT is not None and (dl.getListener().isZip or dl.getListener().extract):
+                size = api.get_download(gid).total_length
+                arch = any([dl.getListener().isZip, dl.getListener().extract])
+                if STORAGE_THRESHOLD is not None:
+                    acpt = check_storage_threshold(size, arch, True)
+                    # True if files allocated, if allocation disabled remove True arg
+                    if not acpt:
+                        msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                        msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+                        dl.getListener().onDownloadError(msg)
+                        return api.remove([download], force=True, files=True)
+                if ZIP_UNZIP_LIMIT is not None and arch:
                     mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'
                     limit = ZIP_UNZIP_LIMIT
                 elif TORRENT_DIRECT_LIMIT is not None:
@@ -40,13 +55,11 @@ def __onDownloadStarted(api, gid):
                     limit = TORRENT_DIRECT_LIMIT
                 if limit is not None:
                     LOGGER.info('Checking File/Folder Size...')
-                    size = api.get_download(gid).total_length
                     if size > limit * 1024**3:
                         dl.getListener().onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                        api.remove([download], force=True)
-                        return
-        except:
-            LOGGER.error(f"onDownloadStart: {gid} stop duplicate and size check didn't pass")
+                        return api.remove([download], force=True, files=True)
+    except:
+        LOGGER.error(f"onDownloadStart: {gid} stop duplicate and size check didn't pass")
 
 @new_thread
 def __onDownloadComplete(api, gid):
@@ -62,7 +75,7 @@ def __onDownloadComplete(api, gid):
             download_dict[dl.uid()] = AriaDownloadStatus(new_gid, dl.getListener())
         LOGGER.info(f'Changed gid from {gid} to {new_gid}')
     elif dl:
-        threading.Thread(target=dl.getListener().onDownloadComplete).start()
+        Thread(target=dl.getListener().onDownloadComplete).start()
 
 @new_thread
 def __onDownloadStopped(api, gid):
@@ -89,7 +102,8 @@ def start_listener():
     aria2.listen_to_notifications(threaded=True, on_download_start=__onDownloadStarted,
                                   on_download_error=__onDownloadError,
                                   on_download_stop=__onDownloadStopped,
-                                  on_download_complete=__onDownloadComplete)
+                                  on_download_complete=__onDownloadComplete,
+                                  timeout=20)
 
 def add_aria2c_download(link: str, path, listener, filename):
     if is_magnet(link):
@@ -102,7 +116,7 @@ def add_aria2c_download(link: str, path, listener, filename):
         return sendMessage(error, listener.bot, listener.update)
     with download_dict_lock:
         download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
-        LOGGER.info(f"Started: {download.gid} DIR:{download.dir} ")
+        LOGGER.info(f"Started: {download.gid} DIR: {download.dir} ")
     sendStatusMessage(listener.update, listener.bot)
 
 start_listener()

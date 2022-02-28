@@ -1,26 +1,35 @@
 from bot import DOWNLOAD_DIR, LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
-from .status import Status
 from time import sleep
 
+def get_download(client, hash_):
+    try:
+        return client.torrents_info(torrent_hashes=hash_)[0]
+    except:
+        pass
 
-class QbDownloadStatus(Status):
 
-    def __init__(self, listener, client, gid, qbhash, select):
-        self.__gid = gid
-        self.__hash = qbhash
+class QbDownloadStatus:
+
+    def __init__(self, listener, client, hash_, select):
+        self.__gid = hash_[:12]
+        self.__hash = hash_
         self.__select = select
         self.__client = client
         self.__listener = listener
         self.__uid = listener.uid
+        self.__info = get_download(client, hash_)
         self.message = listener.message
+
+    def __update(self):
+        self.__info = get_download(self.__client, self.__hash)
 
     def progress(self):
         """
         Calculates the progress of the mirror (upload or download)
         :return: returns progress in percentage
         """
-        return f'{round(self.torrent_info().progress*100, 2)}%'
+        return f'{round(self.__info.progress*100, 2)}%'
 
     def size_raw(self):
         """
@@ -28,30 +37,31 @@ class QbDownloadStatus(Status):
         :return: total size of mirror
         """
         if self.__select:
-            return self.torrent_info().size
+            return self.__info.size
         else:
-            return self.torrent_info().total_size
+            return self.__info.total_size
 
     def processed_bytes(self):
-        return self.torrent_info().downloaded
+        return self.__info.downloaded
 
     def speed(self):
-        return f"{get_readable_file_size(self.torrent_info().dlspeed)}/s"
+        return f"{get_readable_file_size(self.__info.dlspeed)}/s"
 
     def name(self):
-        return self.torrent_info().name
+        self.__update()
+        return self.__info.name
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def size(self):
-        return get_readable_file_size(self.torrent_info().size)
+        return get_readable_file_size(self.__info.size)
 
     def eta(self):
-        return get_readable_time(self.torrent_info().eta)
+        return get_readable_time(self.__info.eta)
 
     def status(self):
-        download = self.torrent_info().state
+        download = self.__info.state
         if download in ["queuedDL", "queuedUP"]:
             return MirrorStatus.STATUS_WAITING
         elif download in ["metaDL", "checkingResumeData"]:
@@ -66,7 +76,7 @@ class QbDownloadStatus(Status):
             return MirrorStatus.STATUS_DOWNLOADING
 
     def torrent_info(self):
-        return self.__client.torrents_info(torrent_hashes=self.__hash)[0]
+        return self.__info
 
     def download(self):
         return self
@@ -84,6 +94,7 @@ class QbDownloadStatus(Status):
         return self.__listener
 
     def cancel_download(self):
+        self.__update()
         if self.status() == MirrorStatus.STATUS_SEEDING:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
             self.__client.torrents_pause(torrent_hashes=self.__hash)
@@ -92,4 +103,4 @@ class QbDownloadStatus(Status):
             self.__client.torrents_pause(torrent_hashes=self.__hash)
             sleep(0.3)
             self.__listener.onDownloadError('Download stopped by user!')
-            self.__client.torrents_delete(torrent_hashes=self.__hash)
+            self.__client.torrents_delete(torrent_hashes=self.__hash, delete_files=True)

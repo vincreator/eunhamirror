@@ -3,19 +3,20 @@
 # Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
 
 import logging
-import qbittorrentapi as qba
-import asyncio
 
-from aiohttp import web
-import nodes
+from time import sleep
+from qbittorrentapi import NotFound404Error, Client as qbClient
+from flask import Flask, request
+
+from web import nodes
+
+app = Flask(__name__)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
                     level=logging.INFO)
 
 LOGGER = logging.getLogger(__name__)
-
-routes = web.RouteTableDef()
 
 page = """
 <html lang="en">
@@ -24,7 +25,7 @@ page = """
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Torrent File Selector</title>
-    <link rel="icon" href="https://telegra.ph/file/cc06d0c613491080cc174.png" type="image/jpg">
+    <link rel="icon" href="https://telegra.ph/file/39a1878efeeb15b15633c.jpg" type="image/jpg">
     <script
       src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
       integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
@@ -193,6 +194,23 @@ input[type="submit"]:hover, input[type="submit"]:focus{
     display: none;
 }
 
+#sticks {
+  margin: 0vh 1vw;
+  margin-bottom: 1vh;
+  padding: 1vh 3vw;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid rgba(255, 255, 255, 0.11);
+  border-radius: 20px;
+  background-color: #161b22;
+  align-items: center;
+}
+
+#sticks.stick {
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+}
 </style>
 </head>
 <body>
@@ -203,8 +221,8 @@ input[type="submit"]:hover, input[type="submit"]:focus{
           src="https://telegra.ph/file/39a1878efeeb15b15633c.jpg"
           alt="logo"
         />
-        <a href="https://t.me/EunhaMirror"> 
-          <h2 class="name">Eunha Mirror Group</h2>
+        <a href="https://t.me/EunhaMirror">
+          <h2 class="name">Qbittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
@@ -212,8 +230,11 @@ input[type="submit"]:hover, input[type="submit"]:focus{
         <a href="https://t.me/EunhaMirror"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
-    <section>
-      <h2 class="size">Selected Files Size: {size}</h2>
+    <div id="sticks">
+        <h4>Selected files: <b id="checked_files">0</b> of <b id="total_files">0</b></h4>
+        <h4>Selected files size: <b id="checked_size">0</b> of <b id="total_size">0</b></h4>
+    </div>
+      <section>
       <form action="{form_url}" method="POST">
        {My_content}
        <input type="submit" name="Select these files ;)">
@@ -222,6 +243,7 @@ input[type="submit"]:hover, input[type="submit"]:focus{
 
     <script>
       $(document).ready(function () {
+        docready();
         var tags = $("li").filter(function () {
           return $(this).find("ul").length !== 0;
         });
@@ -243,37 +265,37 @@ input[type="submit"]:hover, input[type="submit"]:focus{
       });
 
       if(document.getElementsByTagName("ul").length >= 10){
-      var labels = document.querySelectorAll("label");
-      //Shorting the file/folder names
-      labels.forEach(function (label) {
-        if (label.innerText.toString().split(" ").length >= 6) {
-          let FirstPart = label.innerText
-            .toString()
-            .split(" ")
-            .slice(0, 3)
-            .join(" ");
-          let SecondPart = label.innerText
-            .toString()
-            .split(" ")
-            .splice(-3)
-            .join(" ");
-          label.innerText = `${FirstPart}... ${SecondPart}`;
-        }
-        if (label.innerText.toString().split(".").length >= 6) {
-          let first = label.innerText
-            .toString()
-            .split(".")
-            .slice(0, 3)
-            .join(" ");
-          let second = label.innerText
-            .toString()
-            .split(".")
-            .splice(-3)
-            .join(".");
-          label.innerText = `${first}... ${second}`;
-        }
-      });
-     }
+        var labels = document.querySelectorAll("label");
+        //Shorting the file/folder names
+        labels.forEach(function (label) {
+            if (label.innerText.toString().split(" ").length >= 9) {
+                let FirstPart = label.innerText
+                    .toString()
+                    .split(" ")
+                    .slice(0, 5)
+                    .join(" ");
+                let SecondPart = label.innerText
+                    .toString()
+                    .split(" ")
+                    .splice(-5)
+                    .join(" ");
+                label.innerText = `${FirstPart}... ${SecondPart}`;
+            }
+            if (label.innerText.toString().split(".").length >= 9) {
+                let first = label.innerText
+                    .toString()
+                    .split(".")
+                    .slice(0, 5)
+                    .join(" ");
+                let second = label.innerText
+                    .toString()
+                    .split(".")
+                    .splice(-5)
+                    .join(".");
+                label.innerText = `${first}... ${second}`;
+            }
+        });
+    }
     </script>
 
 <script>
@@ -317,6 +339,69 @@ $('input[type="checkbox"]').change(function(e) {
   }
   checkSiblings(container);
 });
+</script>
+<script>
+    function docready () {
+        $("label[for^='filenode_']").css("cursor", "pointer");
+        $("label[for^='filenode_']").click(function () {
+            $(this).prev().click();
+        });
+        checked_size();
+        checkingfiles();
+        var total_files = $("label[for^='filenode_']").length;
+        $("#total_files").text(total_files);
+        var total_size = 0;
+        var ffilenode = $("label[for^='filenode_']");
+        ffilenode.each(function () {
+            var size = parseFloat($(this).data("size"));
+            total_size += size;
+            $(this).append(" - " + humanFileSize(size));
+        });
+        $("#total_size").text(humanFileSize(total_size));
+    };
+    function checked_size() {
+        var checked_size = 0;
+        var checkedboxes = $("input[name^='filenode_']:checked");
+        checkedboxes.each(function () {
+            var size = parseFloat($(this).data("size"));
+            checked_size += size;
+        });
+        $("#checked_size").text(humanFileSize(checked_size));
+    }
+    function checkingfiles() {
+        var checked_files = $("input[name^='filenode_']:checked").length;
+        $("#checked_files").text(checked_files);
+    }
+    $("input[name^='foldernode_']").change(function () {
+        checkingfiles();
+        checked_size();
+    });
+    $("input[name^='filenode_']").change(function () {
+        checkingfiles();
+        checked_size();
+    });
+    function humanFileSize(size) {
+        var i = -1;
+        var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+        do {
+            size = size / 1024;
+            i++;
+        } while (size > 1024);
+        return Math.max(size, 0).toFixed(1) + byteUnits[i];
+    }
+    function sticking() {
+        var window_top = $(window).scrollTop();
+        var div_top = $('.brand').offset().top;
+        if (window_top > div_top) {
+            $('#sticks').addClass('stick');
+        } else {
+            $('#sticks').removeClass('stick');
+        }
+    }
+    $(function () {
+        $(window).scroll(sticking);
+        sticking();
+    });
 </script>
 </body>
 </html>
@@ -529,7 +614,7 @@ section span{
           alt="logo"
         />
         <a href="https://t.me/EunhaMirror">
-          <h2 class="name">Eunha Mirror</h2>
+          <h2 class="name">Qbittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
@@ -557,46 +642,7 @@ section span{
 </html>
 """
 
-@routes.get('/app/files/{hash_id}')
-async def list_torrent_contents(request):
-
-    torr = request.match_info["hash_id"]
-    gets = request.query
-
-    if "pin_code" not in gets.keys():
-        rend_page = code_page.replace("{form_url}", f"/app/files/{torr}")
-        return web.Response(text=rend_page, content_type='text/html')
-
-    client = qba.Client(host="localhost", port="8090")
-    try:
-        res = client.torrents_files(torrent_hash=torr)
-        info = client.torrents_info(torrent_hashes=torr)[0]
-    except qba.NotFound404Error:
-        raise web.HTTPNotFound()
-    passw = ""
-    for n in str(torr):
-        if n.isdigit():
-            passw += str(n)
-        if len(passw) == 4:
-            break
-    if isinstance(passw, bool):
-        raise web.HTTPNotFound()
-    pincode = passw
-    if gets["pin_code"] != pincode:
-        return web.Response(text="Incorrect pin code")
-
-    par = nodes.make_tree(res)
-
-    cont = ["", 0]
-    nodes.create_list(par, cont)
-
-    fsize = nodes.get_readable_file_size(info.size)
-    rend_page = page.replace("{My_content}", cont[0]).replace("{size}", fsize)
-    rend_page = rend_page.replace("{form_url}", f"/app/files/{torr}?pin_code={pincode}")
-    client.auth_log_out()
-    return web.Response(text=rend_page, content_type='text/html')
-
-async def re_verfiy(paused, resumed, client, torr):
+def re_verfiy(paused, resumed, client, hash_id):
 
     paused = paused.strip()
     resumed = resumed.strip()
@@ -607,7 +653,7 @@ async def re_verfiy(paused, resumed, client, torr):
     k = 0
     while True:
 
-        res = client.torrents_files(torrent_hash=torr)
+        res = client.torrents_files(torrent_hash=hash_id)
         verify = True
 
         for i in res:
@@ -623,34 +669,58 @@ async def re_verfiy(paused, resumed, client, torr):
             break
         LOGGER.info("Reverification Failed: correcting stuff...")
         client.auth_log_out()
-        await asyncio.sleep(1)
-        client = qba.Client(host="localhost", port="8090")
+        sleep(1)
+        client = qbClient(host="localhost", port="8090")
         try:
-            client.torrents_file_priority(torrent_hash=torr, file_ids=paused, priority=0)
+            client.torrents_file_priority(torrent_hash=hash_id, file_ids=paused, priority=0)
+        except NotFound404Error:
+            raise NotFound404Error
         except:
             LOGGER.error("Errored in reverification paused")
         try:
-            client.torrents_file_priority(torrent_hash=torr, file_ids=resumed, priority=1)
+            client.torrents_file_priority(torrent_hash=hash_id, file_ids=resumed, priority=1)
+        except NotFound404Error:
+            raise NotFound404Error
         except:
             LOGGER.error("Errored in reverification resumed")
         k += 1
         if k > 5:
-            client.auth_log_out()
             return False
-    client.auth_log_out()
     LOGGER.info("Verified")
     return True
 
-@routes.post('/app/files/{hash_id}')
-async def set_priority(request):
+@app.route('/app/files/<string:hash_id>', methods=['GET'])
+def list_torrent_contents(hash_id):
 
-    torr = request.match_info["hash_id"]
-    client = qba.Client(host="localhost", port="8090")
+    if "pin_code" not in request.args.keys():
+        return code_page.replace("{form_url}", f"/app/files/{hash_id}")
 
-    data = await request.post()
+    pincode = ""
+    for nbr in hash_id:
+        if nbr.isdigit():
+            pincode += str(nbr)
+        if len(pincode) == 4:
+            break
+    if request.args["pin_code"] != pincode:
+        return "<h1>Incorrect pin code</h1>"
+
+    client = qbClient(host="localhost", port="8090")
+    res = client.torrents_files(torrent_hash=hash_id)
+
+    par = nodes.make_tree(res)
+    cont = ["", 0]
+    nodes.create_list(par, cont)
+
+    client.auth_log_out()
+    return page.replace("{My_content}", cont[0]).replace("{form_url}", f"/app/files/{hash_id}?pin_code={pincode}")
+
+@app.route('/app/files/<string:hash_id>', methods=['POST'])
+def set_priority(hash_id):
+
+    client = qbClient(host="localhost", port="8090")
     resume = ""
     pause = ""
-    data = dict(data)
+    data = dict(request.form)
 
     for i, value in data.items():
         if i.find("filenode") != -1:
@@ -665,55 +735,31 @@ async def set_priority(request):
     resume = resume.strip("|")
 
     try:
-        client.torrents_file_priority(torrent_hash=torr, file_ids=pause, priority=0)
-    except qba.NotFound404Error:
-        raise web.HTTPNotFound()
+        client.torrents_file_priority(torrent_hash=hash_id, file_ids=pause, priority=0)
+    except NotFound404Error:
+        raise NotFound404Error
     except:
         LOGGER.error("Errored in paused")
-
     try:
-        client.torrents_file_priority(torrent_hash=torr, file_ids=resume, priority=1)
-    except qba.NotFound404Error:
-        raise web.HTTPNotFound()
+        client.torrents_file_priority(torrent_hash=hash_id, file_ids=resume, priority=1)
+    except NotFound404Error:
+        raise NotFound404Error
     except:
         LOGGER.error("Errored in resumed")
-
-    await asyncio.sleep(2)
-    if not await re_verfiy(pause, resume, client, torr):
+    sleep(2)
+    if not re_verfiy(pause, resume, client, hash_id):
         LOGGER.error("Verification Failed")
-    return await list_torrent_contents(request)
+    client.auth_log_out()
+    return list_torrent_contents(hash_id)
 
+@app.route('/')
+def homepage():
+    return "<h1>See mirror-leech-telegram-bot <a href='https://github.com/vincreator/eunhamirror'>@GitHub</a> By <a href='https://github.com/vincreator'>Vincreator</a></h1>"
 
-@routes.get('/')
-async def homepage(request):
+@app.errorhandler(NotFound404Error)
+def page_not_found(e):
+    return "<h1>404: Torrent not found. Mostly wrong hash input</h2>", 404
 
-    return web.Response(text="<h1>See Eunha-Mirror-bot  <a href='https://github.com/vincreator/Eunha-Mirror-bot'>@GitHub</a> By <a href='https://github.com/vincreator'>ovin</a></h1>", content_type="text/html")
-    
-async def e404_middleware(app, handler):
+if __name__ == "__main__":
+    app.run()
 
-    async def middleware_handler(request):
-
-        try:
-            response = await handler(request)
-            if response.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>Eunha-Mirror-bot</h3>", content_type="text/html")
-            return response
-        except web.HTTPException as ex:
-            if ex.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>Eunha-Mirror-bot</h3>", content_type="text/html")
-            raise
-    return middleware_handler
-
-async def start_server():
-
-    app = web.Application(middlewares=[e404_middleware])
-    app.add_routes(routes)
-    return app
-
-async def start_server_async(port=80):
-
-    app = web.Application(middlewares=[e404_middleware])
-    app.add_routes(routes)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    await web.TCPSite(runner, "0.0.0.0", port).start()
