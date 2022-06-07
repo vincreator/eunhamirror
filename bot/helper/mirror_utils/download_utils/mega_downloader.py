@@ -1,6 +1,5 @@
-import random
-import string
-
+from random import SystemRandom
+from string import ascii_letters, digits
 from os import makedirs
 from threading import Event
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
@@ -189,8 +188,9 @@ def add_mega_download(mega_link: str, path: str, listener):
                 return sendMessage(msg3, listener.bot, listener.message)
     with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
+    listener.onDownloadStart()
     makedirs(path)
-    gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=8))
+    gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
     mega_listener.setValues(node.getName(), api.getSize(node), gid)
     sendStatusMessage(listener.message, listener.bot)
     executor.do(api.startDownload, (node, path))

@@ -2,8 +2,7 @@
 # (c) YashDK [yash-dk@github]
 # Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
 
-import logging
-
+from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from time import sleep
 from qbittorrentapi import NotFound404Error, Client as qbClient
 from flask import Flask, request
@@ -12,11 +11,11 @@ from web import nodes
 
 app = Flask(__name__)
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.INFO)
+basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[FileHandler('log.txt'), StreamHandler()],
+                    level=INFO)
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = getLogger(__name__)
 
 page = """
 <html lang="en">
@@ -221,13 +220,13 @@ input[type="submit"]:hover, input[type="submit"]:focus{
           src="https://telegra.ph/file/39a1878efeeb15b15633c.jpg"
           alt="logo"
         />
-        <a href="https://t.me/EunhaMirror">
+        <a href="https://t.me/eunhamirror">
           <h2 class="name">Qbittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
         <a href="https://github.com/vincreator/eunhamirror"><i class="fab fa-github"></i></a>
-        <a href="https://t.me/EunhaMirror"><i class="fab fa-telegram"></i></a>
+        <a href="https://t.me/eunhamirror"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
     <div id="sticks">
@@ -613,13 +612,13 @@ section span{
           src="https://telegra.ph/file/39a1878efeeb15b15633c.jpg"
           alt="logo"
         />
-        <a href="https://t.me/EunhaMirror">
+        <a href="https://t.me/eunhamirror">
           <h2 class="name">Qbittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
         <a href="https://github.com/vincreator/eunhamirror"><i class="fab fa-github"></i></a>
-        <a href="https://t.me/EunhaMirror"><i class="fab fa-telegram"></i></a>
+        <a href="https://t.me/eunhamirror"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
     <section>
@@ -754,7 +753,7 @@ def set_priority(hash_id):
 
 @app.route('/')
 def homepage():
-    return "<h1>See mirror-leech-telegram-bot <a href='https://github.com/vincreator/eunhamirror'>@GitHub</a> By <a href='https://github.com/vincreator'>Vincreator</a></h1>"
+    return "<h1>Find Eunha Mirror-Bot <a href='https://github.com/vincreator/eunhamirror'>@GitHub</a> By <a href='https://github.com/vincreator'>XuGi</a></h1>"
 
 @app.errorhandler(NotFound404Error)
 def page_not_found(e):

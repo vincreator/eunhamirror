@@ -1,4 +1,4 @@
-from re import match, findall
+from re import match as re_match, findall as re_findall
 from threading import Thread, Event
 from time import time
 from math import ceil
@@ -79,7 +79,7 @@ def getDownloadByGid(gid):
                 and dl.gid() == gid
             ):
                 return dl
-    return False
+    return None
 
 def getAllDownload(req_status: str):
     with download_dict_lock:
@@ -98,7 +98,7 @@ def getAllDownload(req_status: str):
                     return dl
                 elif req_status == 'all':
                     return dl
-    return False
+    return None
 
 def get_progress_bar_string(status):
     completed = status.processed_bytes() / 8
@@ -114,9 +114,6 @@ def get_progress_bar_string(status):
 def get_readable_message():
     with download_dict_lock:
         msg = ""
-        dlspeed_bytes = 0
-        upspeed_bytes = 0
-        START = 0
         if STATUS_LIMIT is not None:
             tasks = len(download_dict)
             global pages
@@ -124,8 +121,7 @@ def get_readable_message():
             if PAGE_NO > pages and pages != 0:
                 globals()['COUNT'] -= STATUS_LIMIT
                 globals()['PAGE_NO'] -= 1
-            START = COUNT
-        for index, download in enumerate(list(download_dict.values())[START:], start=1):
+        for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
             msg += f"<b>Name:</b> <code>{escape(str(download.name()))}</code>"
             msg += f"\n<b>Status:</b> <i>{download.status()}</i>"
             if download.status() not in [
@@ -165,9 +161,10 @@ def get_readable_message():
             msg += "\n\n"
             if STATUS_LIMIT is not None and index == STATUS_LIMIT:
                 break
-        free = get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)
-        currentTime = get_readable_time(time() - botStartTime)
-        bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}"
+        bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
+        bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botStartTime)}"
+        dlspeed_bytes = 0
+        upspeed_bytes = 0
         for download in list(download_dict.values()):
             spd = download.speed()
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
@@ -180,10 +177,7 @@ def get_readable_message():
                     upspeed_bytes += float(spd.split('K')[0]) * 1024
                 elif 'MB/s' in spd:
                     upspeed_bytes += float(spd.split('M')[0]) * 1048576
-        dlspeed = get_readable_file_size(dlspeed_bytes)
-        upspeed = get_readable_file_size(upspeed_bytes)
-        bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
-        bmsg += f"\n<b>DL:</b> {dlspeed}/s | <b>UL:</b> {upspeed}/s"
+        bmsg += f"\n<b>DL:</b> {get_readable_file_size(dlspeed_bytes)}/s | <b>UL:</b> {get_readable_file_size(upspeed_bytes)}/s"
         if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
             msg += f"<b>Page:</b> {PAGE_NO}/{pages} | <b>Tasks:</b> {tasks}\n"
             buttons = ButtonMaker()
@@ -234,14 +228,14 @@ def get_readable_time(seconds: int) -> str:
     return result
 
 def is_url(url: str):
-    url = findall(URL_REGEX, url)
+    url = re_findall(URL_REGEX, url)
     return bool(url)
 
 def is_gdrive_link(url: str):
     return "drive.google.com" in url
 
 def is_gdtot_link(url: str):
-    url = match(r'https?://.+\.gdtot\.\S+', url)
+    url = re_match(r'https?://.+\.gdtot\.\S+', url)
     return bool(url)
 
 def is_mega_link(url: str):
@@ -257,7 +251,7 @@ def get_mega_link_type(url: str):
     return "file"
 
 def is_magnet(url: str):
-    magnet = findall(MAGNET_REGEX, url)
+    magnet = re_findall(MAGNET_REGEX, url)
     return bool(magnet)
 
 def new_thread(fn):
@@ -274,12 +268,9 @@ def new_thread(fn):
 
 def get_content_type(link: str) -> str:
     try:
-        res = rhead(link, allow_redirects=True, timeout=5)
+        res = rhead(link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
         content_type = res.headers.get('content-type')
     except:
-        content_type = None
-
-    if content_type is None:
         try:
             res = urlopen(link, timeout=5)
             info = res.info()

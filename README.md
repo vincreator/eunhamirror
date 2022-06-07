@@ -13,55 +13,14 @@
 ![GitHub](https://img.shields.io/github/license/vincreator/eunhamirror)
 [![Channel](https://img.shields.io/badge/Channel-blue)](https://t.me/Namexian)
 
-**Eunha Mirror** is a _multipurpose_ Telegram Bot writen in Python for mirroring files on the Internet to our beloved Google Drive.
+**Eunha Mirror** is a _multipurpose_ Telegram Bot writen in Python for mirroring files on the Internet to Google Drive and Upload to telegram.
 
 # Features supported:
 <details>
     <summary><b>Click Here For More Details</b></summary>
 
-## Additional Features
-<details>
-    <summary><b>Click here for more details</b></summary>
-
-- qBittorrent
-- From youtube_dl switch to yt-dlp engine
-- Size limiting for Torrent/Direct, Tar/Unzip, Mega and clone
-- Stop duplicates for all tasks except for qBittorrent and youtube-dl tasks 
-- Tar/Unzip G-Drive link 
-- Select files from Torrent before downloading using qbittorrent
-- Sudo with or without Database
-- Multiple Trackers support
-- Extracting **tar.xz** support
-- Counting files/folders from Google Drive link
-- View Link button instead of direct download link
-- Shell and Executor
-- Speedtest
-- Status Pages for unlimited tasks
-- Clone status
-- Search in multiple Drive folder/TD
-- Many bugs has been fixed
-- Torrent search Supported:
-```
-nyaa.si, sukebei, 1337x, piratebay,
-tgx, yts, eztv, torlock, rarbg
-```
-- Direct links Supported:
-```
-letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles,
-fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream,
-sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com,
-streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net,
-1fichier.com, 1drv.ms (Only works for file not folder or business account),
-uptobox.com (Uptobox account must be premium), solidfiles.com
-```
-</details>
-
-## From Original Repos
-<details>
-    <summary><b>Click here for more details</b></summary>
-    
-- Mirroring direct download links, Torrent, and Telegram files to Google Drive
-- Mirroring Mega.nz links to Google Drive (If you have non-premium Mega account, it will limit download to 5GB per 6 hours)
+- Mirror direct download links, Torrent, and Telegram files to Google Drive
+- Mirror Mega.nz links to Google Drive
 - Copy files from someone's Drive to your Drive (Using Autorclone)
 - Download/Upload progress, Speeds and ETAs
 - Mirror all yt-dlp supported links
@@ -71,18 +30,46 @@ uptobox.com (Uptobox account must be premium), solidfiles.com
 - Service Account support
 - Delete files from Drive
 - Shortener support
-- Custom Filename (Only for direct links, Telegram files and yt-dlp. Not for Mega links and Torrents)
-- Extracting and downloading password protected index links. See these examples:
-<p><a href="https://telegra.ph/Magneto-Python-Aria---Custom-Filename-Examples-01-20"> <img src="https://img.shields.io/badge/See%20Telegraph-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
-
+- Multiple Trackers support
+- Shell and Executor
+- Add sudo users
+- Custom Filename* (Only for direct links, Telegram files and yt-dlp. Not for Mega links, Gdrive links or Torrents)
+- Extract password protected files
 - Extract these filetypes and uploads to Google Drive
+  > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
+- qBittorrent
+- Select files from Torrent before downloading using qbittorrent
+- Leech (splitting, thumbnail for each user, setting as document or as media for each user)
+- Size limiting for Torrent/Direct, Zip/Unzip, Mega and Clone
+- Stop duplicates for all tasks except yt-dlp tasks
+- Zip/Unzip G-Drive links
+- Counting files/folders from Google Drive link
+- View Link button, extra button to open file index link in broswer instead of direct download
+- Status Pages for unlimited tasks
+- Clone status
+- Search in multiple Drive folder/TeamDrive
+- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
+- Multi-TD list by token.pickle if exists
+- Extract rar, zip and 7z splits with or without password
+- Zip file/folder with or without password
+- Use Token.pickle if file not found with Service Account for all Gdrive functions
+- Random Service Account at startup
+- Mirror/Leech/Watch/Clone/Count/Del by reply
+- YT-DLP quality buttons
+- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
+- Docker image support for linux `amd64, arm64, arm/v7, arm/v6, s390x, arm64/v8` (**Note**: Use `anasty17/mltb:arm64` for `arm64/v8` or oracle)
+- Update bot at startup and with restart command using `UPSTREAM_REPO`
+- Qbittorrent seed until reaching specific ratio or time
+- Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
+- Save leech settings including thumbnails in database
+- Mirror/Leech/Clone multi links/files with one command
+- Extenstion Filter for uploading/cloning files
+- Incomplete task notifier to get incomplete task messages after restart, works with database.
+
+- Direct links Supported:
 ```
-ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, 
-APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, 
-HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, 
-NTFS, RPM, SquashFS, UDF, VHD, XAR, Z.
+letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
 ```
-</details>
 </details>
 
 # How to deploy?
@@ -132,87 +119,102 @@ _____REMOVE_THIS_LINE_____=True
 ```
 Fill up rest of the fields. Meaning of each fields are discussed below:
 ### Required Field
-- `BOT_TOKEN`: The Telegram bot token that you get from [`@BotFather`](https://t.me/BotFather)
-- `TELEGRAM_API`: This is to authenticate to your Telegram account for downloading Telegram files. You can get this from [`telegram.org`](https://my.telegram.org) DO NOT put this in quotes.
-- `TELEGRAM_HASH`: This is to authenticate to your Telegram account for downloading Telegram files. You can get this from [`telegram.org`](https://my.telegram.org)
-- `OWNER_ID`: The Telegram user ID (not username) of the Owner of the bot
-- `GDRIVE_FOLDER_ID`: This is the folder ID of the Google Drive Folder to which you want to upload all the mirrors.
-- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to
-- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: A short interval of time in seconds after which the Mirror progress message is updated. (I recommend to keep it `5` seconds at least)  
-- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. (**Note**: Set to `-1` to never automatically delete messages)
-### Optional Field
-- `ACCOUNTS_ZIP_URL`: Only if you want to load your Service Account externally from an Index Link. Archive your Service Account json files to a zip file directly (don't archive the accounts folder. Select all the jsons inside and zip them only instead. Name the zip file with whatever you want, it doesn't matter). Fill this with the direct link of that file.
+- `BOT_TOKEN`: The Telegram Bot Token that you got from [@BotFather](https://t.me/BotFather)
+- `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder to which you want to upload all the mirrors.
+- `OWNER_ID`: The Telegram User ID (not username) of the Owner of the bot. `Int`
+- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to.
+- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
+- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
+- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive. Default is `False`. `Bool`
+- `TELEGRAM_API`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Int`
+- `TELEGRAM_HASH`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org.
+
+**2. Optional Fields**
+- `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: If deploying on heroku and using heroku postgresql delete this variable from **config.env** file. **DATABASE_URL** will be grabbed from heroku variables.
+- `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space.
+- `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space.
+- `IGNORE_PENDING_REQUESTS`: Ignore pending requests after restart. Default is `False`. `Bool`
+- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
+- `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index.
+- `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks.
+- `STOP_DUPLICATE`: Bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). Default is `False`. `Bool`
+- `CMD_INDEX`: commands index number. This number will added at the end all commands.
+- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
+- `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds.
+- `EXTENTION_FILTER`: File extentions that won't upload/clone. Separate them by space.
+- `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and (supergroup or channel). Default is `False`. `Bool`
+
+### Update
+- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect. DON'T delete .gitignore file. For more information read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
+- `UPSTREAM_BRANCH`: Upstream branch for update. Default is `master`.
+
+### Leech
+- `TG_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`.
+- `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
+- `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
+- `CUSTOM_FILENAME`: Add custom word to leeched file name.
+
+### qBittorrent
+- `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). This Var is optional on VPS and required for Heroku specially to avoid app sleeping/idling. For Heroku fill `https://yourappname.herokuapp.com`. Still got idling? You can use http://cron-job.org to ping your Heroku app.
+- `SERVER_PORT`: Only For VPS even if `IS_VPS` is `False`, which is the **BASE_URL_OF_BOT** Port.
+- `WEB_PINCODE`: If empty or `False` means no more pincode required while qbit web selection. `Bool`
+- `QB_SEED`: QB torrent will be seeded after and while uploading until reaching specific ratio or time, edit `MaxRatio` or `GlobalMaxSeedingMinutes` or both from qbittorrent.conf (`-1` means no limit, but u can cancel manually by gid). **NOTE**: 1. Don't change `MaxRatioAction`, 2. Only works with `/qbmirror` and `/qbzipmirror`. Default is `False`. `Bool`
+  - **Qbittorrent NOTE**: If your facing ram exceeded issue then set limit for `MaxConnecs`, decrease `AsyncIOThreadsCount` in qbittorrent config and set limit of `DiskWriteCacheSize` to `32`.
+
+### RSS
+- `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec.
+- `RSS_COMMAND`: Choose command for the desired action.
+- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id.
+- `USER_SESSION_STRING`: To send rss links from your telegram account instead of adding bot to channel then linking the channel to group to get rss link since bot will not read command from itself or other bot. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure.
+  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. You must use bot in group. You can add the bot to a channel and add link this channel to group so messages sent by bot to channel will be forwarded to group without using `USER_STRING_SESSION`.
+
+### Private Files
+- `ACCOUNTS_ZIP_URL`: Only if you want to load your Service Account externally from an Index Link or by any direct download link NOT webpage link. Archive the accounts folder to ZIP file. Fill this with the direct download link of zip file. If index need authentication so add direct download as shown below:
+  - `https://username:password@example.workers.dev/...`
 - `TOKEN_PICKLE_URL`: Only if you want to load your **token.pickle** externally from an Index Link. Fill this with the direct link of that file.
-- `MULTI_SEARCH_URL`: To use search/list in multiple TD/folder. Run `driveid.py` in your terminal and follow it. It will generate a file `drive_folder` when you finish. Upload that file [`here`](https://gist.github.com/) with the same file name. Open the raw file of that gist, it's URL will be your required config. Check wiki for gist related help. 
-- `DATABASE_URL`: Your Database URL. See [`Generate Database`](https://github.com/vincreator/eunhamirror/tree/master#generate-database) to generate database (**NOTE**: If you use database you can save your sudo id permanent using `/addsudo` command).
-- `AUTHORIZED_CHATS`: Fill user_id and chat_id (not username) of you want to authorize, Seprate them with space, Examples: `-0123456789 -1122334455 6915401739`.
-- `SUDO_USERS`: Fill user_id (not username) of you want to sudoers, Seprate them with space, Examples: `0123456789 1122334455 6915401739` (**NOTE**: If you want save sudo id permanent without database, you must fill your sudo id there).
-- `IS_TEAM_DRIVE`: Set to `True` if `GDRIVE_FOLDER_ID` is from a Team Drive else `False` or Leave it empty.
-- `USE_SERVICE_ACCOUNTS`: (Leave empty if unsure) Whether to use Service Accounts or not. For this to work see [`Using Service Accounts`](https://github.com/vincreator/eunhamirror#generate-service-accounts-what-is-service-account) section below.
-- `INDEX_URL`:  [`Generate Index`](https://github.com/vincreator/eunhamirror/tree/master#Index-Repo)
-- `MEGA_API_KEY`: Mega.nz api key to mirror mega.nz links. Get it from [`Mega SDK Page`](https://mega.nz/sdk)
-- `MEGA_EMAIL_ID`: Your email id you used to sign up on mega.nz for using premium accounts (Leave th)
-- `MEGA_PASSWORD`: Your password for your mega.nz account
-- `BLOCK_MEGA_FOLDER`: If you want to remove mega.nz folder support, set it to `True`.
-- `BLOCK_MEGA_LINKS`: If you want to remove mega.nz mirror support, set it to `True`.
-- `STOP_DUPLICATE`: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**Note**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
-- `CLONE_LIMIT`: To limit cloning Google Drive (leave space between number and unit, Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
-- `MEGA_LIMIT`: To limit downloading Mega (leave space between number and unit, Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
-- `TORRENT_DIRECT_LIMIT`: To limit the Torrent/Direct mirror size, Leave space between number and unit. Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
-- `TAR_UNZIP_LIMIT`: To limit mirroring as Tar or unzipmirror. Available units is (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
-- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if the END of link from browser link bar is `?a=view`, if yes make it `True` it will work (Compatible with [`Bhadoo Index`](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code)
-- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [`Uptobox Premium Account`](https://uptobox.com/my_account).
-- `IGNORE_PENDING_REQUESTS`: If you want the bot to ignore pending requests after it restarts, set this to `True`.
-- `STATUS_LIMIT`: Status limit with buttons (**NOTE**: Recommend limit status to `4` tasks max).
-- `IS_VPS`: (Only for VPS) Don't set this to `True` even if you are using vps, unless facing error with web server. Also go to start.sh and replace `$PORT` by `80` or any port you want to use.
-- `SERVER_PORT`: (Only if IS_VPS is `True`) Base URL Port
-- `BASE_URL_OF_BOT`: (Required for Heroku) Valid BASE URL of where the bot is deploy. Ip/domain of your bot like `http://myip` or if you have chosen other port then `80` then `http://myip:port`, for Heroku fill `https://yourappname.herokuapp.com` (**NOTE**: No slash at the end)
-- `SHORTENER_API`: Fill your Shortener api key if you are using Shortener.
-- `SHORTENER`: if you want to use Shortener in Gdrive and index link, fill Shortener url here. Examples:
-```
-exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io
-```
+- `MULTI_SEARCH_URL`: Check `drive_folder` setup [here](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#multi-search-ids). Write **drive_folder** file [here](https://gist.github.com/). Open the raw file of that gist, it's URL will be your required variable. Should be in this form after removing commit id: https://gist.githubusercontent.com/username/gist-id/raw/drive_folder
+- `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only.
+- `NETRC_URL`: To create .netrc file contains authentication for aria2c and yt-dlp. Use gist raw link and remove commit id from the link, so you can edit it from gists only. **NOTE**: After editing .nterc you need to restart the docker or if deployed on heroku so restart dyno in case your edits related to aria2c authentication.
+  - **NOTE**: All above url variables used incase you want edit them in future easily without deploying again or if you want to deploy from public fork. If deploying using cli or private fork you can leave these variables empty add token.pickle, accounts folder, drive_folder, .netrc and cookies.txt directly to root but you can't update them without rebuild OR simply leave all above variables and use private UPSTREAM_REPO.
 
-Above are the supported url Shorteners. Except these only some url Shorteners are supported.
+### MEGA
+- `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk)
+- `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account.
+- `MEGA_PASSWORD`: Password for mega.nz account.
 
-### Add more buttons (Optional Field)
-Three buttons are already added of Drive Link, Index Link, and View Link, you can add extra buttons, these are optional, if you don't know what are below entries, simply leave them, don't fill anything in them.
-- `BUTTON_FOUR_NAME`:
-- `BUTTON_FOUR_URL`:
-- `BUTTON_FIVE_NAME`:
-- `BUTTON_FIVE_URL`:
-- `BUTTON_SIX_NAME`:
-- `BUTTON_SIX_URL`:
+### Shortener
+- `SHORTENER_API`: Fill your Shortener API key.
+- `SHORTENER`: Shortener URL.
+  - Supported URL Shorteners:
+  >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us, cutt.ly
 
-</details>
+### GDTOT
+- `CRYPT`: Cookie for gdtot google drive link generator. Follow these [steps](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#gdtot-cookies).
 
-## Bot commands to be set in [@BotFather](https://t.me/BotFather)
-<details>
-    <summary><b>Click here for more details</b></summary>
+### Size Limits
+- `TORRENT_DIRECT_LIMIT`: To limit the Torrent/Direct mirror size. Don't add unit. Default unit is `GB`.
+- `ZIP_UNZIP_LIMIT`: To limit the size of zip and unzip commands. Don't add unit. Default unit is `GB`.
+- `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit. Default unit is `GB`.
+- `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit. Default unit is `GB`.
+- `STORAGE_THRESHOLD`: To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled. Don't add unit. Default unit is `GB`.
 
-```
-help - Get Detailed Help
-seed - Start Mirroring
-pack - Start mirroring and upload as .tar
-zip - Start mirroring and upload as .zip
-unpack - Extract files
-qb - Start Mirroring using qBittorrent
-qbtar - Start mirroring and upload as .tar using qb
-qbzip - Start mirroring and upload as .zip using qb
-qbunpack - Extract files using qBittorrent
-clone - Copy file/folder to Drive
-list -  [query] Searches files in Drive
-count - Count file/folder of Drive link
-watch - Mirror Youtube-dl supported link
-tarwatch - Mirror Youtube playlist link and upload as .tar
-zipwatch - Mirror Youtube playlist link and upload as .zip
-status - Get Mirror Status message
-tshelp - Get mirror search
-cancel - Cancel a task
-stats - Bot Usage Stats
-ping - Ping the Bot
-```
+### Buttons
+- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True`, compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
 
+- Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
+  - `BUTTON_FOUR_NAME`:
+  - `BUTTON_FOUR_URL`:
+  - `BUTTON_FIVE_NAME`:
+  - `BUTTON_FIVE_URL`:
+  - `BUTTON_SIX_NAME`:
+  - `BUTTON_SIX_URL`:
+
+### Torrent Search
+- `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py).
+  - Supported Sites:
+  >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
+- `SEARCH_LIMIT`: Search limit for search api, limit for each site and not overall result limit. Default is zero (Default api limit for each site).
+- `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).
 </details>
 
 ## Deploying
@@ -227,11 +229,11 @@ sudo dockerd
 ```
 - Build Docker image:
 ```
-sudo docker build . -t mirror-bot
+sudo docker build . -t eunhamirror
 ```
 - Run the image:
 ```
-sudo docker run -p 80:80 mirror-bot
+sudo docker run -p 80:80 eunhamirror
 ```
 OR
 
@@ -269,128 +271,6 @@ sudo docker container prune
 ```
 sudo docker image prune -a
 ```
-- Video from Tortoolkit repo
-<p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
-
-</details>
-
-## Deploying on Heroku with Github Workflows.
-<details>
-    <summary><b>Click here for more details</b></summary>
-    
-## Pre-requisites
-
-- [`token.pickle`](https://github.com/vincreator/eunhamirror#getting-google-oauth-api-credential-file)
-- [`Heroku`](https://heroku.com) accounts
-- Recommended to use 1 App in 1 Heroku account
-- **First before going to deployment,** you must create app on your heroku account [HERE](https://dashboard.heroku.com/new-app) Choose region by you like, Name should only contain lowercase letters, numbers, dashes, and must be unique.
-
-- Don't use bin/fake credits card, because your Heroku account will get banned.
-
-## Deployment
-
-1. Give a star and Fork this repo then upload **token.pickle** to your forks, or you can upload your **token.pickle** to your Index and put your **token.pickle** link to `TOKEN_PICKLE_URL` (**NOTE**: If you don't upload **token.pickle** uploading will not work).
-
-2. Go to Repository `Settings` -> `Secrets`
-
-	![secrets](https://telegra.ph/file/bb8cb0eced5caad68a41b.jpg)
-
-3. Add the below Required Variables one by one by clicking `New Repository Secret` everytime.
-
-	* `HEROKU_API_KEY` Your Heroku API key, get it from [`Dasboard Heroku`](https://dashboard.heroku.com/account)
-	* `HEROKU_APP_NAME` See above, on Pre-requisites
-	* `CONFIG_FILE_URL` Fill [`This`](https://raw.githubusercontent.com/vincreator/eunhamirror/master/config_sample.env) in any text editor. Remove the `_____REMOVE_THIS_LINE_____=True` line and fill the variables. Go to [`Gist`](https://gist.github.com) and paste your config data. Rename the file to `config.env` then create secret gist. Click on Raw, copy the link. This will be your `CONFIG_FILE_URL`. Refer to below images for clarity. 
-
-	![steps 1 to 5](https://telegra.ph/file/ec56f647ee556e86f6c7d.png)
-	
-- **NOTE**: Remove commit id from raw link to be able to change variables without updating the `CONFIG_FILE_URL` in secrets.
-  should be in this form: `https://gist.githubusercontent.com/username/gist-id/raw/config.env`
-  - Before: `https://gist.githubusercontent.com/vincreator/ab5b0cb5d73f8992590ac732f0780f5c/raw/fe8162eddaec32d2408024efdf9ea8fc70028ed9/config.env`
-  - After: `https://gist.githubusercontent.com/vincreator/ab5b0cb5d73f8992590ac732f0780f5c/raw/config.env`
-  - You only need to restart your bot after editing `config.env` gist secret.
-
-4. After adding all the above Required Variables go to Github Actions tab in your repo
-
-5. Select `Container` workflow as shown below:
-
-	![Container](https://telegra.ph/file/dd04efe104e618df3143a.png)
-
-6. Then click on Run workflow
-
-	![Run workflow](https://telegra.ph/file/b7c97424537f8638ec00a.png)
-
-7. _Done!_ your bot will be deployed now.
-
-## NOTE
-- Don't change/edit variables from Heroku if you want to change/edit do it from `config.env`
-- If got suspend apps after deploy just delete your apps and make it new with same name, then do `Container` again
-
-## Credits
-- [`arghyac35`](https://github.com/arghyac35) for Tutorial
-- [`Adek`](https://github.com/adekmaulana) for Github workflow method to deploy Heroku app
-
-</details>
-
-## Deploy on Heroku with heroku-cli
-<details>
-    <summary><b>Click here for more details</b></summary>
-
-- Install [`Heroku cli`](https://devcenter.heroku.com/articles/heroku-cli)
-- Login into your heroku account with command:
-```
-heroku login
-```
-- Create a new heroku app:
-```
-heroku create appname
-```
-- Select This App in your Heroku-cli: 
-```
-heroku git:remote -a appname
-```
-- Change Dyno Stack to a Docker Container:
-```
-heroku stack:set container -a appname
-```
-- Clone this repo:
-```
-git clone https://github.com/vincreator/eunhamirror
-ls
-cd eunha
-```
-- get token [`Read here`](https://github.com/vincreator/eunhamirror#getting-google-oauth-api-credential-file)
-- get sa token (`opsional`) [`Read here`](https://github.com/vincreator/eunhamirror#generate-service-accounts)
-- Init the repo clone
-```
-git init
-```
-- Add all stuff:
-```
-git add .
-git add * -f
-git add .gitignore
-```
-- Commit new changes:
-```
-git commit -m "EunhaMirror Updates"
-```
-- Push Code to Heroku:
-```
-git push heroku master
-```
-- Restart Worker by these commands or you can Do it manually too in heroku.
-- For Turning off the Bot:
-```
-heroku ps:scale web=0 -a appname
-```
-- For Turning on the Bot:
-```
-heroku ps:scale web=1 -a appname
-```
-- **Note**:
-- Deploy 2 Times to unsuspend (Delete your apps and make it new with same name)
-- Don't add config on heroku, Use `config.env`
-
 </details>
 
 ## Getting Google OAuth API credential file
