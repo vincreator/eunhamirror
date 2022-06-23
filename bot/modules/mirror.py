@@ -31,7 +31,7 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, editMessage, deleteMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManger
 
@@ -367,13 +367,17 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
         content_type = get_content_type(link)
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
+                fddl = sendMessage(f"<b>Generating DirectLink:</b> <code>{link}</code>", bot, message)
                 is_gdtot = is_gdtot_link(link)
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
+                editMessage(f"✅️<b>Directlink found:</b> <code>{link}</code>", fddl)
+                sleep(1.5)
             except DirectDownloadLinkException as e:
+                deleteMessage(bot, fddl)
                 LOGGER.info(str(e))
                 if str(e).startswith('ERROR:'):
-                    return sendMessage(str(e), bot, message)
+                    return sendMessage(f"{tag}\n" + str(e), bot, message)
     elif isQbit and not is_magnet(link) and not ospath.exists(link):
         if link.endswith('.torrent') or "https://api.telegram.org/file/" in link:
             content_type = None
