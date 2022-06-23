@@ -373,6 +373,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
                 LOGGER.info(f"Generated link: {link}")
                 editMessage(f"✅️<b>Directlink found:</b> <code>{link}</code>", fddl)
                 sleep(1.5)
+                deleteMessage(bot, fddl)
             except DirectDownloadLinkException as e:
                 deleteMessage(bot, fddl)
                 LOGGER.info(str(e))
