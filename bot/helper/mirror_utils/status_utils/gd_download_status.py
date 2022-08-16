@@ -1,20 +1,15 @@
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
-from bot import DOWNLOAD_DIR
 
 
 class GdDownloadStatus:
     def __init__(self, obj, size, listener, gid):
         self.__obj = obj
         self.__size = size
-        self.__uid = listener.uid
-        self.message = listener.message
         self.__gid = gid
-
-    def path(self):
-        return f"{DOWNLOAD_DIR}{self.__uid}"
+        self.message = listener.message
 
     def processed_bytes(self):
-        return self.__obj.downloaded_bytes
+        return self.__obj.processed_bytes
 
     def size_raw(self):
         return self.__size
@@ -33,8 +28,8 @@ class GdDownloadStatus:
 
     def progress_raw(self):
         try:
-            return self.__obj.downloaded_bytes / self.__size * 100
-        except ZeroDivisionError:
+            return self.__obj.processed_bytes / self.__size * 100
+        except:
             return 0
 
     def progress(self):
@@ -44,16 +39,16 @@ class GdDownloadStatus:
         """
         :return: Download speed in Bytes/Seconds
         """
-        return self.__obj.dspeed()
+        return self.__obj.speed()
 
     def speed(self):
         return f'{get_readable_file_size(self.speed_raw())}/s'
 
     def eta(self):
         try:
-            seconds = (self.__size - self.__obj.downloaded_bytes) / self.speed_raw()
+            seconds = (self.__size - self.__obj.processed_bytes) / self.speed_raw()
             return f'{get_readable_time(seconds)}'
-        except ZeroDivisionError:
+        except:
             return '-'
 
     def download(self):
