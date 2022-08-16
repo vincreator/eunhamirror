@@ -20,6 +20,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 ## Features supported:
 <details>
     <summary><b>Click Here For More Details</b></summary>
+    
 ### qBittorrent
 - Qbittorrent support
 - Select files from Torrent before and while downloading
@@ -495,8 +496,11 @@ Then add emails from emails.txt to Google Group, after that add this Google Grou
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
 ------
+</details>
 
 ### Generate Database
+<details>
+    <summary><b>Click Here For More Details</b></summary>
 
 **1. Using Railway**
 - Go to [railway](https://railway.app) and create account
