@@ -20,7 +20,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 ## Features supported:
 <details>
     <summary><b>Click Here For More Details</b></summary>
-    
+
 ### qBittorrent
 - Qbittorrent support
 - Select files from Torrent before and while downloading
@@ -129,7 +129,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 - Clone this repo:
 ```
-git clone https://github.com/anasty17/mirror-leech-telegram-bot mirrorbot/ && cd mirrorbot
+git clone https://github.com/vincreator/eunhamirror EunhaMirror/ && cd EunhaMirror
 ```
 - For Debian based distros
 ```
