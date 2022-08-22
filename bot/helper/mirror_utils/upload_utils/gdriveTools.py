@@ -12,7 +12,6 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError, Error as GCError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
-from telegram import InlineKeyboardMarkup
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
 
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -150,7 +149,7 @@ class GoogleDriveHelper:
         # File body description
         file_metadata = {
             'name': file_name,
-            'description': 'Uploaded by eunha',
+            'description': 'Uploaded by Mirror-leech-telegram-bot',
             'mimeType': mime_type,
         }
         if parent_id is not None:
@@ -383,7 +382,7 @@ class GoogleDriveHelper:
             else:
                 msg = f"Error.\n{err}"
             return msg, ""
-        return msg, InlineKeyboardMarkup(buttons.build_menu(2))
+        return msg, buttons.build_menu(2)
 
     def __cloneFolder(self, name, local_path, folder_id, parent_id):
         LOGGER.info(f"Syncing: {local_path}")
@@ -408,7 +407,7 @@ class GoogleDriveHelper:
     def __create_directory(self, directory_name, parent_id):
         file_metadata = {
             "name": directory_name,
-            "description": "Uploaded by eunha",
+            "description": "Uploaded by Mirror-leech-telegram-bot",
             "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
         }
         if parent_id is not None:
