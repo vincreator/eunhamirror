@@ -186,6 +186,13 @@ Thread(target=aria2c_init).start()
 sleep(1.5)
 
 try:
+    GDTOT_CRYPT = getConfig('GDTOT_CRYPT')
+    if len(GDTOT_CRYPT) == 0:
+        raise KeyError
+except KeyError:
+    GDTOT_CRYPT = None
+    
+try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
     if len(MEGA_API_KEY) == 0:
         raise KeyError
@@ -207,17 +214,16 @@ try:
         raise KeyError
 except:
     DB_URI = None
-try:
-    LEECH_SPLIT_SIZE = getConfig('LEECH_SPLIT_SIZE')
-    if len(LEECH_SPLIT_SIZE) == 0 or (not IS_PREMIUM_USER and int(LEECH_SPLIT_SIZE) > 2097152000) \
-       or int(LEECH_SPLIT_SIZE) > 4194304000:
-        raise KeyError
-    LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
-except:
-    LEECH_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
 
 MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
 
+try:
+    LEECH_SPLIT_SIZE = getConfig('LEECH_SPLIT_SIZE')
+    if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE:
+        raise KeyError
+    LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
+except:
+    LEECH_SPLIT_SIZE = MAX_SPLIT_SIZE
 try:
     DUMP_CHAT = getConfig('DUMP_CHAT')
     if len(DUMP_CHAT) == 0:

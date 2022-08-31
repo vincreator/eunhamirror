@@ -8,19 +8,21 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
-import math
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
+from math import pow as math_pow, floor as math_floor
 from urllib.parse import urlparse, unquote
 from json import loads as jsonloads
 from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup
-from base64 import standard_b64encode
+from base64 import standard_b64encode, b64decode
 from time import sleep
 
-from bot import LOGGER, UPTOBOX_TOKEN
+
+from bot import LOGGER, UPTOBOX_TOKEN, GDTOT_CRYPT
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.bot_utils import is_gdtot_link
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
@@ -34,10 +36,10 @@ def direct_link_generator(link: str):
         return yandex_disk(link)
     elif 'mediafire.com' in link:
         return mediafire(link)
-    elif 'uptobox.com' in link:
-        return uptobox(link)
     elif 'zippyshare.com' in (link):
         return zippy_share(link)
+    elif 'uptobox.com' in link:
+        return uptobox(link)
     elif 'osdn.net' in link:
         return osdn(link)
     elif 'github.com' in link:
@@ -66,6 +68,8 @@ def direct_link_generator(link: str):
         return solidfiles(link)
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
+    elif is_gdtot_link(link):
+        return gdtot(link)
     elif 'upload.ee' in link:
         return uploadee(link)
     elif any(x in link for x in fmed_list):
@@ -145,13 +149,13 @@ def zippy_share(url: str) -> str:
 
     try:
         var_a = re_findall(r"var.a.=.(\d+)", js_script)[0]
-        mtk = int(math.pow(int(var_a),3) + 3)
+        mtk = int(math_pow(int(var_a),3) + 3)
         uri1 = re_findall(r"\.href.=.\"/(.*?)/\"", js_script)[0]
         uri2 = re_findall(r"\+\"/(.*?)\"", js_script)[0]
     except:
         try:
             a, b = re_findall(r"var.[ab].=.(\d+)", js_script)
-            mtk = eval(f"{math.floor(int(a)/3) + int(a) % int(b)}")
+            mtk = eval(f"{math_floor(int(a)/3) + int(a) % int(b)}")
             uri1 = re_findall(r"\.href.=.\"/(.*?)/\"", js_script)[0]
             uri2 = re_findall(r"\)\+\"/(.*?)\"", js_script)[0]
         except:
@@ -414,3 +418,25 @@ def uploadee(url: str) -> str:
         return sa['href']
     except:
         raise DirectDownloadLinkException(f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
+
+def gdtot(url: str) -> str:
+    """Gdtot google drive link generator
+    By https://github.com/xcscxr"""
+
+    if GDTOT_CRYPT is None:
+        raise DirectDownloadLinkException("ERROR: CRYPT cookie not provided")
+    match = re_findall(r"https?://(.+)\.gdtot\.(.+)\/\S+\/\S+", url)[0]
+    with rsession() as client:
+        client.cookies.update({"crypt": GDTOT_CRYPT})
+        client.get(url)
+        res = client.get(
+            f"https://{match[0]}.gdtot.{match[1]}/dld?id={url.split('/')[-1]}"
+        )
+    matches = re_findall("gd=(.*?)&", res.text)
+    try:
+        decoded_id = b64decode(str(matches[0])).decode("utf-8")
+    except Exception as e:
+        raise DirectDownloadLinkException(
+            "ERROR: Try in your broswer, mostly file not found or user limit exceeded!"
+        ) from e
+    return f"https://drive.google.com/open?id={decoded_id}"

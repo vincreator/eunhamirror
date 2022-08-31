@@ -7,7 +7,7 @@ from telegram.ext import CommandHandler
 from requests import get as rget
 
 from bot import dispatcher, DOWNLOAD_DIR, LOGGER
-from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type
+from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, is_gdtot_link, get_content_type
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
@@ -30,7 +30,8 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
     seed_time = None
     select = False
     seed = False
-    multi=1
+    multi = 0
+    is_gdtot = False
 
     if len(message_args) > 1:
         args = mesg[0].split(maxsplit=3)
@@ -49,13 +50,16 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 ratio = dargs[1] if dargs[1] else None
                 if len(dargs) == 3:
                     seed_time = dargs[2] if dargs[2] else None
-        message_args = mesg[0].split(maxsplit=index)
-        if len(message_args) > index:
-            link = message_args[index].strip()
-            if link.isdigit():
-                multi = int(link)
-                link = ''
-            elif link.startswith(("|", "pswd:")):
+            elif x.isdigit():
+                multi = int(x)
+                mi = index
+        if multi == 0:
+            message_args = mesg[0].split(maxsplit=index)
+            if len(message_args) > index:
+                link = message_args[index].strip()
+                if link.startswith(("|", "pswd:")):
+                    link = ''
+            else:
                 link = ''
         else:
             link = ''
@@ -104,7 +108,9 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 if multi > 1:
                     sleep(4)
                     nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-                    nextmsg = sendMessage(message.text.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
+                    msg = message.text.split(maxsplit=mi+1)
+                    msg[mi] = f"{multi - 1}"
+                    nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
                     nextmsg.from_user.id = message.from_user.id
                     sleep(4)
                     Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
@@ -113,33 +119,34 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 link = file_.get_file().file_path
 
     if not is_url(link) and not is_magnet(link):
-        help_msg = "<b>Send link along with command line:</b>"
-        if isQbit:
-            help_msg += "\n<code>/qbcmd</code> {link} pswd: xx [zip/unzip]"
-            help_msg += "\n\n<b>By replying to link/file:</b>"
-            help_msg += "\n<code>/qbcmd</code> pswd: xx [zip/unzip]"
-            help_msg += "\n\n<b>Bittorrent selection:</b>"
-            help_msg += "\n<code>/qbcmd</code> <b>s</b> {link} or by replying to {file/link}"
-            help_msg += "\n\n<b>Qbittorrent seed</b>:"
-            help_msg += "\n<code>/qbcmd</code> <b>d</b> {link} or by replying to {file/link}.\n"
-            help_msg += "To specify ratio and seed time. Ex: d:0.7:10 (ratio and time) or d:0.7 "
-            help_msg += "(only ratio) or d::10 (only time) where time in minutes"
-            help_msg += "\n\n<b>Multi links only by replying to first link/file:</b>"
-            help_msg += "\n<code>/qbcmd</code> 10(number of links/files)"
-        else:
-            help_msg += "\n<code>/cmd</code> {link} |newname pswd: xx [zip/unzip]"
-            help_msg += "\n\n<b>By replying to link/file:</b>"
-            help_msg += "\n<code>/cmd</code> |newname pswd: xx [zip/unzip]"
-            help_msg += "\n\n<b>Direct link authorization:</b>"
-            help_msg += "\n<code>/cmd</code> {link} |newname pswd: xx\nusername\npassword"
-            help_msg += "\n\n<b>Bittorrent selection:</b>"
-            help_msg += "\n<code>/cmd</code> <b>s</b> {link} or by replying to {file/link}"
-            help_msg += "\n\n<b>Bittorrent seed</b>:"
-            help_msg += "\n<code>/cmd</code> <b>d</b> {link} or by replying to {file/link}.\n"
-            help_msg += "To specify ratio and seed time. Ex: d:0.7:10 (ratio and time) or d:0.7 "
-            help_msg += "(only ratio) or d::10 (only time) where time in minutes"
-            help_msg += "\n\n<b>Multi links only by replying to first link/file:</b>"
-            help_msg += "\n<code>/cmd</code> 10(number of links/files)"
+        help_msg = '''
+<code>/cmd</code> link |newname pswd: xx(zip/unzip)
+
+<b>By replying to link/file:</b>
+<code>/cmd</code> |newname pswd: xx(zip/unzip)
+
+<b>Direct link authorization:</b>
+<code>/cmd</code> link |newname pswd: xx(zip/unzip)
+<b>username</b>
+<b>password</b>
+
+<b>Bittorrent selection:</b>
+<code>/cmd</code> <b>s</b> link or by replying to file/link
+
+<b>Bittorrent seed</b>:
+<code>/cmd</code> <b>d</b> link or by replying to file/link
+To specify ratio and seed time add d:ratio:time. Ex: d:0.7:10 (ratio and time) or d:0.7 (only ratio) or d::10 (only time) where time in minutes.
+
+<b>Multi links only by replying to first link/file:</b>
+<code>/cmd</code> 10(number of links/files)
+Number should be always before |newname or pswd:
+
+<b>NOTES:</b>
+1. When use cmd by reply don't add any perfix in link msg! always add them after cmd msg!
+2. You can't add this perfixes <b>|newname, pswd: and authorization</b> randomly. They should be arranged like exmaple above, rename then pswd then authorization. If you don't want to add pswd for example then it will be (|newname authorization), just don't change the arrangement.
+3. You can add this perfixes <b>d, s and multi</b> randomly. Ex: <code>/cmd</code> d:1:20 s 10 <b>or</b> <code>/cmd</code> s 10 d:0.5:100
+4. Commands that start with <b>qb</b> are ONLY for torrents.
+'''
         return sendMessage(help_msg, bot, message)
 
     LOGGER.info(link)
@@ -149,6 +156,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
         content_type = get_content_type(link)
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
+                is_gdtot = is_gdtot_link(link)
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
@@ -190,7 +198,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand[0]} to extracts Google Drive archive folder/file"
             sendMessage(gmsg, bot, message)
         else:
-            Thread(target=add_gd_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
+            Thread(target=add_gd_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, is_gdtot, name)).start()
     elif is_mega_link(link):
         Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
     elif isQbit and (is_magnet(link) or ospath.exists(link)):
@@ -213,7 +221,9 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
     if multi > 1:
         sleep(4)
         nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        nextmsg = sendMessage(message.text.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
+        msg = message.text.split(maxsplit=mi+1)
+        msg[mi] = f"{multi - 1}"
+        nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
         nextmsg.from_user.id = message.from_user.id
         sleep(4)
         Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
