@@ -4,11 +4,11 @@ from string import ascii_letters, digits
 from bot import download_dict, download_dict_lock, LOGGER, STOP_DUPLICATE
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendFile, sendMarkup
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendFile
 from bot.helper.ext_utils.fs_utils import get_base_name
 
 
-def add_gd_download(link, path, listener, newname, is_gdtot):
+def add_gd_download(link, path, listener, newname):
     res, size, name, files = GoogleDriveHelper().helper(link)
     if res != "":
         return sendMessage(res, listener.bot, listener.message)
@@ -38,5 +38,3 @@ def add_gd_download(link, path, listener, newname, is_gdtot):
     listener.onDownloadStart()
     sendStatusMessage(listener.message, listener.bot)
     drive.download(link)
-    if is_gdtot:
-        drive.deletefile(link)
