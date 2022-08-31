@@ -100,8 +100,8 @@ Catatan: Coba setiap perintah tanpa awalan apa pun untuk melihat detail lebih la
 /{BotCommands.QbUnzipLeechCommand[0]} atau /{BotCommands.QbUnzipLeechCommand[1]}: Mulai leeching menggunakan qBittorrent dan unggah file/folder yang diekstrak dari ekstensi arsip apa pun.
 /{BotCommands.YtdlLeechCommand[0]} atau /{BotCommands.YtdlLeechCommand[1]}: Tautan yang didukung Leech yt-dlp.
 /{BotCommands.YtdlZipLeechCommand[0]} atau /{BotCommands.YtdlZipLeechCommand[1]}: Lintah yt-dlp mendukung tautan sebagai zip.
-/{BotCommands.CloneCommand} [drive_url][gdtot_url]: Salin file/folder ke Google Drive.
-/{BotCommands.CountCommand} [drive_url][gdtot_url]: Menghitung file/folder Google Drive.
+/{BotCommands.CloneCommand} [drive_url]: Salin file/folder ke Google Drive.
+/{BotCommands.CountCommand} [drive_url]: Menghitung file/folder Google Drive.
 /{BotCommands.DeleteCommand} [drive_url]: Menghapus file/folder dari Google Drive (Hanya Pemilik & Sudo).
 /{BotCommands.LeechSetCommand} [permintaan]: Setelan lintah.
 /{BotCommands.SetThumbCommand}: Balas foto untuk mengaturnya sebagai Thumbnail.

@@ -224,8 +224,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Str`
 - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account. `Str`
 - `MEGA_PASSWORD`: Password for mega.nz account. `Str`
-### GDTOT
-- `CRYPT`: Cookie for gdtot google drive link generator. Follow these [steps](https://github.com/vincreator/eunhamirror/tree/master#gdtot-cookies).
+
 ### Buttons
 - `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
 
@@ -564,40 +563,6 @@ Using Aria2c you can also use built in feature from bot with or without username
 machine example.workers.dev password index_password
 ```
 Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
-
------
-</details>
-
-## Gdtot Cookies
-<details>
-    <summary><b>Click Here For More Details</b></summary>
-
-To Clone or Leech gdtot link follow these steps:
-1. Login/Register to [gdtot](https://new.gdtot.top).
-2. Copy this script and paste it in browser address bar.
-   - **Note**: After pasting it check at the beginning of the script in broswer address bar if `javascript:` exists or not, if not so write it as shown below.
-   ```javascript
-   javascript:(function () {
-    const input = document.createElement('input');
-    COOKIE = JSON.parse(JSON.stringify({cookie : document.cookie}));
-    input.value = COOKIE['cookie'].split('crypt=')[1];
-    document.body.appendChild(input);
-    input.focus();
-    input.select();
-    var result = document.execCommand('copy');
-    document.body.removeChild(input);
-     if(result)
-       alert('Crypt copied to clipboard');
-     else
-       prompt('Failed to copy Crypt. Manually copy below Crypt\n\n', input.value);
-   })();
-   ```
-   - After pressing enter your browser will prompt a alert.
-3. Now you'll get Crypt value in your clipboard
-   ```
-   NGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxWdSVT0%3D
-   ```
-4. From this you have to paste value for **CRYPT** in config.env file.
 
 -----
 </details>

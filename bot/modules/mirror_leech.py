@@ -7,7 +7,7 @@ from telegram.ext import CommandHandler
 from requests import get as rget
 
 from bot import dispatcher, DOWNLOAD_DIR, LOGGER
-from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, is_gdtot_link, get_content_type
+from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
@@ -31,7 +31,6 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
     select = False
     seed = False
     multi = 0
-    is_gdtot = False
 
     if len(message_args) > 1:
         args = mesg[0].split(maxsplit=3)
@@ -156,7 +155,6 @@ Number should be always before |newname or pswd:
         content_type = get_content_type(link)
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
-                is_gdtot = is_gdtot_link(link)
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
@@ -198,7 +196,7 @@ Number should be always before |newname or pswd:
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand[0]} to extracts Google Drive archive folder/file"
             sendMessage(gmsg, bot, message)
         else:
-            Thread(target=add_gd_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, is_gdtot, name)).start()
+            Thread(target=add_gd_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
     elif is_mega_link(link):
         Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
     elif isQbit and (is_magnet(link) or ospath.exists(link)):
