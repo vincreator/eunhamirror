@@ -43,9 +43,9 @@ try:
             with open('.netrc', 'wb+') as f:
                 f.write(res.content)
         else:
-            log_error(f'Failed to download .netrc {res.status_code}')
+            log_error(f"Failed to download .netrc {res.status_code}")
     except Exception as e:
-        log_error(f'NETRC_URL: {e}')
+        log_error(f"NETRC_URL: {e}")
 except:
     pass
 try:
@@ -55,14 +55,14 @@ try:
 except:
     SERVER_PORT = 80
 
-Popen(f'gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}', shell=True)
-srun(['qbittorrent-nox', '-d', '--profile=.'])
+Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
-    srun(['touch', '.netrc'])
-srun(['cp', '.netrc', '/root/.netrc'])
-srun(['chmod', '600', '.netrc'])
-srun(['chmod', '+x', 'aria.sh'])
-srun('./aria.sh', shell=True)
+    srun(["touch", ".netrc"])
+srun(["cp", ".netrc", "/root/.netrc"])
+srun(["chmod", "600", ".netrc"])
+srun(["chmod", "+x", "aria.sh"])
+srun("./aria.sh", shell=True)
 sleep(0.5)
 
 Interval = []
@@ -79,14 +79,14 @@ except:
 
 aria2 = ariaAPI(
     ariaClient(
-        host='http://localhost',
+        host="http://localhost",
         port=6800,
-        secret='',
+        secret="",
     )
 )
 
 def get_client():
-    return qbClient(host='localhost', port=8090)
+    return qbClient(host="localhost", port=8090)
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
@@ -113,7 +113,7 @@ try:
     BOT_TOKEN = getConfig('BOT_TOKEN')
     parent_id = getConfig('GDRIVE_FOLDER_ID')
     DOWNLOAD_DIR = getConfig('DOWNLOAD_DIR')
-    if not DOWNLOAD_DIR.endswith('/'):
+    if not DOWNLOAD_DIR.endswith("/"):
         DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
     DOWNLOAD_STATUS_UPDATE_INTERVAL = int(getConfig('DOWNLOAD_STATUS_UPDATE_INTERVAL'))
     OWNER_ID = int(getConfig('OWNER_ID'))
@@ -121,7 +121,7 @@ try:
     TELEGRAM_API = getConfig('TELEGRAM_API')
     TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
 except:
-    log_error('One or more env variables missing! Exiting now')
+    log_error("One or more env variables missing! Exiting now")
     exit(1)
 
 try:
@@ -152,28 +152,28 @@ try:
     USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
     if len(USER_SESSION_STRING) == 0:
         raise KeyError
-    log_info('Creating client from USER_SESSION_STRING')
+    log_info("Creating client from USER_SESSION_STRING")
     app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
     with app:
         IS_PREMIUM_USER = app.me.is_premium
 except:
-    log_info('Creating client from BOT_TOKEN')
+    log_info("Creating client from BOT_TOKEN")
     app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
 
 try:
     RSS_USER_SESSION_STRING = getConfig('RSS_USER_SESSION_STRING')
     if len(RSS_USER_SESSION_STRING) == 0:
         raise KeyError
-    log_info('Creating client from RSS_USER_SESSION_STRING')
+    log_info("Creating client from RSS_USER_SESSION_STRING")
     rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=RSS_USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
 except:
     rss_session = None
 
 def aria2c_init():
     try:
-        log_info('Initializing Aria2c')
-        link = 'https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent'
-        dire = DOWNLOAD_DIR.rstrip('/')
+        log_info("Initializing Aria2c")
+        link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
+        dire = DOWNLOAD_DIR.rstrip("/")
         aria2.add_uris([link], {'dir': dire})
         sleep(3)
         downloads = aria2.get_downloads()
@@ -181,7 +181,7 @@ def aria2c_init():
         for download in downloads:
             aria2.remove([download], force=True, files=True)
     except Exception as e:
-        log_error(f'Aria2c initializing error: {e}')
+        log_error(f"Aria2c initializing error: {e}")
 Thread(target=aria2c_init).start()
 sleep(1.5)
 
@@ -191,6 +191,7 @@ try:
         raise KeyError
 except KeyError:
     GDTOT_CRYPT = None
+    
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
     if len(MEGA_API_KEY) == 0:
@@ -244,7 +245,7 @@ try:
 except:
     UPTOBOX_TOKEN = None
 try:
-    INDEX_URL = getConfig('INDEX_URL').rstrip('/')
+    INDEX_URL = getConfig('INDEX_URL').rstrip("/")
     if len(INDEX_URL) == 0:
         raise KeyError
     INDEX_URLS.append(INDEX_URL)
@@ -252,7 +253,7 @@ except:
     INDEX_URL = None
     INDEX_URLS.append(None)
 try:
-    SEARCH_API_LINK = getConfig('SEARCH_API_LINK').rstrip('/')
+    SEARCH_API_LINK = getConfig('SEARCH_API_LINK').rstrip("/")
     if len(SEARCH_API_LINK) == 0:
         raise KeyError
 except:
@@ -328,12 +329,12 @@ try:
 except:
     WEB_PINCODE = False
 try:
-    IGNORE_PENDING_REQUESTS = getConfig('IGNORE_PENDING_REQUESTS')
+    IGNORE_PENDING_REQUESTS = getConfig("IGNORE_PENDING_REQUESTS")
     IGNORE_PENDING_REQUESTS = IGNORE_PENDING_REQUESTS.lower() == 'true'
 except:
     IGNORE_PENDING_REQUESTS = False
 try:
-    BASE_URL = getConfig('BASE_URL_OF_BOT').rstrip('/')
+    BASE_URL = getConfig('BASE_URL_OF_BOT').rstrip("/")
     if len(BASE_URL) == 0:
         raise KeyError
 except:
@@ -365,9 +366,9 @@ try:
             with open('token.pickle', 'wb+') as f:
                 f.write(res.content)
         else:
-            log_error(f'Failed to download token.pickle, link got HTTP response: {res.status_code}')
+            log_error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
     except Exception as e:
-        log_error(f'TOKEN_PICKLE_URL: {e}')
+        log_error(f"TOKEN_PICKLE_URL: {e}")
 except:
     pass
 try:
@@ -380,13 +381,13 @@ try:
             with open('accounts.zip', 'wb+') as f:
                 f.write(res.content)
         else:
-            log_error(f'Failed to download accounts.zip, link got HTTP response: {res.status_code}')
+            log_error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
     except Exception as e:
-        log_error(f'ACCOUNTS_ZIP_URL: {e}')
+        log_error(f"ACCOUNTS_ZIP_URL: {e}")
         raise KeyError
-    srun(['unzip', '-q', '-o', 'accounts.zip'])
-    srun(['chmod', '-R', '777', 'accounts'])
-    osremove('accounts.zip')
+    srun(["unzip", "-q", "-o", "accounts.zip"])
+    srun(["chmod", "-R", "777", "accounts"])
+    osremove("accounts.zip")
 except:
     pass
 try:
@@ -399,9 +400,9 @@ try:
             with open('drive_folder', 'wb+') as f:
                 f.write(res.content)
         else:
-            log_error(f'Failed to download drive_folder, link got HTTP response: {res.status_code}')
+            log_error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
     except Exception as e:
-        log_error(f'MULTI_SEARCH_URL: {e}')
+        log_error(f"MULTI_SEARCH_URL: {e}")
 except:
     pass
 try:
@@ -414,13 +415,13 @@ try:
             with open('cookies.txt', 'wb+') as f:
                 f.write(res.content)
         else:
-            log_error(f'Failed to download cookies.txt, link got HTTP response: {res.status_code}')
+            log_error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
     except Exception as e:
-        log_error(f'YT_COOKIES_URL: {e}')
+        log_error(f"YT_COOKIES_URL: {e}")
 except:
     pass
 
-DRIVES_NAMES.append('Main')
+DRIVES_NAMES.append("Main")
 DRIVES_IDS.append(parent_id)
 if ospath.exists('drive_folder'):
     with open('drive_folder', 'r+') as f:
@@ -429,7 +430,7 @@ if ospath.exists('drive_folder'):
             try:
                 temp = line.strip().split()
                 DRIVES_IDS.append(temp[1])
-                DRIVES_NAMES.append(temp[0].replace('_', ' '))
+                DRIVES_NAMES.append(temp[0].replace("_", " "))
             except:
                 pass
             try:
