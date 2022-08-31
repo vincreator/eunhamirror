@@ -186,6 +186,13 @@ Thread(target=aria2c_init).start()
 sleep(1.5)
 
 try:
+    GDTOT_CRYPT = getConfig('GDTOT_CRYPT')
+    if len(GDTOT_CRYPT) == 0:
+        raise KeyError
+except KeyError:
+    GDTOT_CRYPT = None
+    
+try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
     if len(MEGA_API_KEY) == 0:
         raise KeyError
