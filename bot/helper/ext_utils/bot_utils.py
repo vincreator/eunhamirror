@@ -1,273 +1,262 @@
-from re import findall as re_findall, match as re_match
-from threading import Thread, Event
+from os import remove as osremove, path as ospath, mkdir, walk, listdir, rmdir, makedirs
+from sys import exit as sysexit
+from json import loads as jsonloads
+from shutil import rmtree
+from PIL import Image
+from magic import Magic
+from subprocess import run as srun, check_output, Popen
 from time import time
 from math import ceil
-from html import escape
-from psutil import virtual_memory, cpu_percent, disk_usage
-from requests import head as rhead
-from urllib.request import urlopen
+from re import split as re_split, I
 
-from bot import download_dict, download_dict_lock, STATUS_LIMIT, botStartTime, DOWNLOAD_DIR, WEB_PINCODE, BASE_URL
-from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.button_build import ButtonMaker
+from .exceptions import NotSupportedExtractionArchive
+from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, LEECH_SPLIT_SIZE, EQUAL_SPLITS, IS_PREMIUM_USER, MAX_SPLIT_SIZE
 
-MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
+ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
+            ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
+            ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
+            ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
 
-URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
+def clean_target(path: str):
+    if ospath.exists(path):
+        LOGGER.info(f"Cleaning Target: {path}")
+        if ospath.isdir(path):
+            try:
+                rmtree(path)
+            except:
+                pass
+        elif ospath.isfile(path):
+            try:
+                osremove(path)
+            except:
+                pass
 
-COUNT = 0
-PAGE_NO = 1
+def clean_download(path: str):
+    if ospath.exists(path):
+        LOGGER.info(f"Cleaning Download: {path}")
+        try:
+            rmtree(path)
+        except:
+            pass
 
-
-class MirrorStatus:
-    STATUS_UPLOADING = "Upload"
-    STATUS_DOWNLOADING = "Download"
-    STATUS_CLONING = "Clone"
-    STATUS_WAITING = "Queue"
-    STATUS_PAUSED = "Pause"
-    STATUS_ARCHIVING = "Archive"
-    STATUS_EXTRACTING = "Extract"
-    STATUS_SPLITTING = "Split"
-    STATUS_CHECKING = "CheckUp"
-    STATUS_SEEDING = "Seed"
-
-SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-
-
-class setInterval:
-    def __init__(self, interval, action):
-        self.interval = interval
-        self.action = action
-        self.stopEvent = Event()
-        thread = Thread(target=self.__setInterval)
-        thread.start()
-
-    def __setInterval(self):
-        nextTime = time() + self.interval
-        while not self.stopEvent.wait(nextTime - time()):
-            nextTime += self.interval
-            self.action()
-
-    def cancel(self):
-        self.stopEvent.set()
-
-def get_readable_file_size(size_in_bytes) -> str:
-    if size_in_bytes is None:
-        return '0B'
-    index = 0
-    while size_in_bytes >= 1024:
-        size_in_bytes /= 1024
-        index += 1
+def start_cleanup():
     try:
-        return f'{round(size_in_bytes, 2)}{SIZE_UNITS[index]}'
-    except IndexError:
-        return 'File too large'
+        rmtree(DOWNLOAD_DIR)
+    except:
+        pass
+    makedirs(DOWNLOAD_DIR)
 
-def getDownloadByGid(gid):
-    with download_dict_lock:
-        for dl in list(download_dict.values()):
-            if dl.gid() == gid:
-                return dl
-    return None
+def clean_all():
+    aria2.remove_all(True)
+    get_client().torrents_delete(torrent_hashes="all")
+    app.stop()
+    try:
+        rmtree(DOWNLOAD_DIR)
+    except:
+        pass
 
-def getAllDownload(req_status: str):
-    with download_dict_lock:
-        for dl in list(download_dict.values()):
-            status = dl.status()
-            if req_status in ['all', status]:
-                return dl
-    return None
+def exit_clean_up(signal, frame):
+    try:
+        LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
+        clean_all()
+        sysexit(0)
+    except KeyboardInterrupt:
+        LOGGER.warning("Force Exiting before the cleanup finishes!")
+        sysexit(1)
 
-def bt_selection_buttons(id_: str):
-    if len(id_) > 20:
-        gid = id_[:12]
+def clean_unwanted(path: str):
+    LOGGER.info(f"Cleaning unwanted files/folders: {path}")
+    for dirpath, subdir, files in walk(path, topdown=False):
+        for filee in files:
+            if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
+                osremove(ospath.join(dirpath, filee))
+        if dirpath.endswith((".unwanted", "splited_files_mltb")):
+            rmtree(dirpath)
+    for dirpath, subdir, files in walk(path, topdown=False):
+        if not listdir(dirpath):
+            rmdir(dirpath)
+
+def get_path_size(path: str):
+    if ospath.isfile(path):
+        return ospath.getsize(path)
+    total_size = 0
+    for root, dirs, files in walk(path):
+        for f in files:
+            abs_path = ospath.join(root, f)
+            total_size += ospath.getsize(abs_path)
+    return total_size
+
+def get_base_name(orig_path: str):
+    ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
+    if len(ext) > 0:
+        ext = ext[0]
+        return re_split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
     else:
-        gid = id_
+        raise NotSupportedExtractionArchive('File format not supported for extraction')
 
-    pincode = ""
-    for n in id_:
-        if n.isdigit():
-            pincode += str(n)
-        if len(pincode) == 4:
-            break
+def get_mime_type(file_path):
+    mime = Magic(mime=True)
+    mime_type = mime.from_file(file_path)
+    mime_type = mime_type or "text/plain"
+    return mime_type
 
-    buttons = ButtonMaker()
-    if WEB_PINCODE:
-        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
-        buttons.sbutton("Pincode", f"btsel pin {gid} {pincode}")
-    else:
-        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
-    buttons.sbutton("Done Selecting", f"btsel done {gid} {id_}")
-    return buttons.build_menu(2)
+def take_ss(video_file, duration):
+    des_dir = 'Thumbnails'
+    if not ospath.exists(des_dir):
+        mkdir(des_dir)
+    des_dir = ospath.join(des_dir, f"{time()}.jpg")
+    if duration is None:
+        duration = get_media_info(video_file)[0]
+    if duration == 0:
+        duration = 3
+    duration = duration // 2
 
-def get_progress_bar_string(status):
-    completed = status.processed_bytes() / 8
-    total = status.size_raw() / 8
-    p = 0 if total == 0 else round(completed * 100 / total)
-    p = min(max(p, 0), 100)
-    cFull = p // 8
-    p_str = '■' * cFull
-    p_str += '□' * (12 - cFull)
-    p_str = f"[{p_str}]"
-    return p_str
+    status = srun(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(duration),
+                   "-i", video_file, "-frames:v", "1", des_dir])
 
-def get_readable_message():
-    with download_dict_lock:
-        msg = ""
-        if STATUS_LIMIT is not None:
-            tasks = len(download_dict)
-            global pages
-            pages = ceil(tasks/STATUS_LIMIT)
-            if PAGE_NO > pages and pages != 0:
-                globals()['COUNT'] -= STATUS_LIMIT
-                globals()['PAGE_NO'] -= 1
-        for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
-            msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
-            msg += f"<code>{escape(str(download.name()))}</code>"
-            if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
-                msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
-                msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
-                msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
-                if hasattr(download, 'seeders_num'):
+    if status.returncode != 0 or not ospath.lexists(des_dir):
+        return None
+
+    with Image.open(des_dir) as img:
+        img.convert("RGB").save(des_dir, "JPEG")
+
+    return des_dir
+
+def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, noMap=False):
+    if listener.seed and not listener.newDir:
+        dirpath = f"{dirpath}/splited_files_mltb"
+        if not ospath.exists(dirpath):
+            mkdir(dirpath)
+    parts = ceil(size/LEECH_SPLIT_SIZE)
+    if EQUAL_SPLITS and not inLoop:
+        split_size = ceil(size/parts) + 1000
+    if get_media_streams(path)[0]:
+        duration = get_media_info(path)[0]
+        base_name, extension = ospath.splitext(file_)
+        split_size = split_size - 5000000
+        while i <= parts:
+            parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
+            out_path = ospath.join(dirpath, parted_name)
+            if not noMap:
+                listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
+                                         "-i", path, "-fs", str(split_size), "-map", "0", "-map_chapters", "-1",
+                                         "-c", "copy", out_path])
+            else:
+                listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
+                                          "-i", path, "-fs", str(split_size), "-map_chapters", "-1", "-c", "copy",
+                                          out_path])
+            listener.suproc.wait()
+            if listener.suproc.returncode == -9:
+                return False
+            elif listener.suproc.returncode != 0 and not noMap:
+                LOGGER.warning(f"Retrying without map, -map 0 not working in all situations. Path: {path}")
+                try:
+                    osremove(out_path)
+                except:
+                    pass
+                return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, True)
+            elif listener.suproc.returncode != 0:
+                LOGGER.warning(f"Unable to split this video, if it's size less than {MAX_SPLIT_SIZE} will be uploaded as it is. Path: {path}")
+                try:
+                    osremove(out_path)
+                except:
+                    pass
+                return "errored"
+            out_size = get_path_size(out_path)
+            if out_size > MAX_SPLIT_SIZE:
+                dif = out_size - MAX_SPLIT_SIZE
+                split_size = split_size - dif + 5000000
+                osremove(out_path)
+                return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, noMap)
+            lpd = get_media_info(out_path)[0]
+            if lpd == 0:
+                LOGGER.error(f'Something went wrong while splitting, mostly file is corrupted. Path: {path}')
+                break
+            elif duration == lpd:
+                if not noMap:
+                    LOGGER.warning(f"Retrying without map, -map 0 not working in all situations. Path: {path}")
                     try:
-                        msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
+                        osremove(out_path)
                     except:
                         pass
-            elif download.status() == MirrorStatus.STATUS_SEEDING:
-                msg += f"\n<b>Size: </b>{download.size()}"
-                msg += f"\n<b>Speed: </b>{download.upload_speed()}"
-                msg += f" | <b>Uploaded: </b>{download.uploaded_bytes()}"
-                msg += f"\n<b>Ratio: </b>{download.ratio()}"
-                msg += f" | <b>Time: </b>{download.seeding_time()}"
-            else:
-                msg += f"\n<b>Size: </b>{download.size()}"
-            msg += f"\n<code>/{BotCommands.CancelMirror} {download.gid()}</code>"
-            msg += "\n\n"
-            if STATUS_LIMIT is not None and index == STATUS_LIMIT:
+                    return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, True)
+                else:
+                    LOGGER.warning(f"This file has been splitted with default stream and audio, so you will only see one part with less size from orginal one because it doesn't have all streams and audios. This happens mostly with MKV videos. noMap={noMap}. Path: {path}")
+                    break
+            elif lpd <= 4:
+                osremove(out_path)
                 break
-        if len(msg) == 0:
-            return None, None
-        dl_speed = 0
-        up_speed = 0
-        for download in list(download_dict.values()):
-            if download.status() == MirrorStatus.STATUS_DOWNLOADING:
-                spd = download.speed()
-                if 'K' in spd:
-                    dl_speed += float(spd.split('K')[0]) * 1024
-                elif 'M' in spd:
-                    dl_speed += float(spd.split('M')[0]) * 1048576
-            elif download.status() == MirrorStatus.STATUS_UPLOADING:
-                spd = download.speed()
-                if 'KB/s' in spd:
-                    up_speed += float(spd.split('K')[0]) * 1024
-                elif 'MB/s' in spd:
-                    up_speed += float(spd.split('M')[0]) * 1048576
-            elif download.status() == MirrorStatus.STATUS_SEEDING:
-                spd = download.upload_speed()
-                if 'K' in spd:
-                    up_speed += float(spd.split('K')[0]) * 1024
-                elif 'M' in spd:
-                    up_speed += float(spd.split('M')[0]) * 1048576
-        bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
-        bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botStartTime)}"
-        bmsg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
-        if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
-            msg += f"<b>Page:</b> {PAGE_NO}/{pages} | <b>Tasks:</b> {tasks}\n"
-            buttons = ButtonMaker()
-            buttons.sbutton("Previous", "status pre")
-            buttons.sbutton("Next", "status nex")
-            button = buttons.build_menu(2)
-            return msg + bmsg, button
-        return msg + bmsg, ""
+            start_time += lpd - 3
+            i = i + 1
+    else:
+        out_path = ospath.join(dirpath, file_ + ".")
+        listener.suproc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3",
+                                f"--bytes={split_size}", path, out_path])
+        listener.suproc.wait()
+        if listener.suproc.returncode == -9:
+            return False
+    return True
 
-def turn(data):
+def get_media_info(path):
+
     try:
-        with download_dict_lock:
-            global COUNT, PAGE_NO
-            if data[1] == "nex":
-                if PAGE_NO == pages:
-                    COUNT = 0
-                    PAGE_NO = 1
-                else:
-                    COUNT += STATUS_LIMIT
-                    PAGE_NO += 1
-            elif data[1] == "pre":
-                if PAGE_NO == 1:
-                    COUNT = STATUS_LIMIT * (pages - 1)
-                    PAGE_NO = pages
-                else:
-                    COUNT -= STATUS_LIMIT
-                    PAGE_NO -= 1
-        return True
-    except:
-        return False
+        result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
+                               "json", "-show_format", "-show_streams", path]).decode('utf-8')
+    except Exception as e:
+        LOGGER.error(f'{e}. Mostly file not found!')
+        return 0, None, None
 
-def get_readable_time(seconds: int) -> str:
-    result = ''
-    (days, remainder) = divmod(seconds, 86400)
-    days = int(days)
-    if days != 0:
-        result += f'{days}d'
-    (hours, remainder) = divmod(remainder, 3600)
-    hours = int(hours)
-    if hours != 0:
-        result += f'{hours}h'
-    (minutes, seconds) = divmod(remainder, 60)
-    minutes = int(minutes)
-    if minutes != 0:
-        result += f'{minutes}m'
-    seconds = int(seconds)
-    result += f'{seconds}s'
-    return result
+    fields = jsonloads(result).get('format')
+    if fields is None:
+        LOGGER.error(f"get_media_info: {result}")
+        return 0, None, None
 
-def is_url(url: str):
-    url = re_findall(URL_REGEX, url)
-    return bool(url)
+    duration = round(float(fields.get('duration', 0)))
 
-def is_gdrive_link(url: str):
-    return "drive.google.com" in url
+    fields = fields.get('tags')
+    if fields:
+        artist = fields.get('artist')
+        if artist is None:
+            artist = fields.get('ARTIST')
+        title = fields.get('title')
+        if title is None:
+            title = fields.get('TITLE')
+    else:
+        title = None
+        artist = None
 
-def is_gdtot_link(url: str):
-    url = re_match(r'https?://.+\.gdtot\.\S+', url)
-    return bool(url)
+    return duration, artist, title
 
-def is_mega_link(url: str):
-    return "mega.nz" in url or "mega.co.nz" in url
+def get_media_streams(path):
 
-def get_mega_link_type(url: str):
-    if "folder" in url:
-        return "folder"
-    elif "file" in url:
-        return "file"
-    elif "/#F!" in url:
-        return "folder"
-    return "file"
+    is_video = False
+    is_audio = False
 
-def is_magnet(url: str):
-    magnet = re_findall(MAGNET_REGEX, url)
-    return bool(magnet)
+    mime_type = get_mime_type(path)
+    if mime_type.startswith('audio'):
+        is_audio = True
+        return is_video, is_audio
 
-def new_thread(fn):
-    """To use as decorator to make a function call threaded.
-    Needs import
-    from threading import Thread"""
+    if not mime_type.startswith('video'):
+        return is_video, is_audio
 
-    def wrapper(*args, **kwargs):
-        thread = Thread(target=fn, args=args, kwargs=kwargs)
-        thread.start()
-        return thread
-
-    return wrapper
-
-def get_content_type(link: str) -> str:
     try:
-        res = rhead(link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
-        content_type = res.headers.get('content-type')
-    except:
-        try:
-            res = urlopen(link, timeout=5)
-            info = res.info()
-            content_type = info.get_content_type()
-        except:
-            content_type = None
-    return content_type
+        result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
+                               "json", "-show_streams", path]).decode('utf-8')
+    except Exception as e:
+        LOGGER.error(f'{e}. Mostly file not found!')
+        return is_video, is_audio
+
+    fields = jsonloads(result).get('streams')
+    if fields is None:
+        LOGGER.error(f"get_media_streams: {result}")
+        return is_video, is_audio
+
+    for stream in fields:
+        if stream.get('codec_type') == 'video':
+            is_video = True
+        elif stream.get('codec_type') == 'audio':
+            is_audio = True
+
+    return is_video, is_audio
+
