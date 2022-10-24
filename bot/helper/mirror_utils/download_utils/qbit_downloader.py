@@ -23,7 +23,7 @@ SEEDING = set()
 def __get_hash_magnet(mgt: str):
     hash_ = re_search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
     if len(hash_) == 32:
-        hash_ = b16encode(b32decode(str(hash_))).decode()
+        hash_ = b16encode(b32decode(hash_.upper())).decode()
     return str(hash_)
 
 def __get_hash_file(path):
@@ -225,7 +225,7 @@ def __qb_listener():
                         LOGGER.error(msg)
                         client.torrents_recheck(torrent_hashes=tor_info.hash)
                         RECHECKED.add(tor_info.hash)
-                    elif TORRENT_TIMEOUT is not None and time() - STALLED_TIME[tor_info.hash] >= TORRENT_TIMEOUT:
+                    elif TORRENT_TIMEOUT is not None and time() - STALLED_TIME.get(tor_info.hash, 0) >= TORRENT_TIMEOUT:
                         Thread(target=__onDownloadError, args=("Dead Torrent!", client, tor_info)).start()
                 elif tor_info.state == "missingFiles":
                     client.torrents_recheck(torrent_hashes=tor_info.hash)

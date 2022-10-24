@@ -5,7 +5,7 @@ from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from threading import RLock
 
-from bot import AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME, EXTENSION_FILTER, DUMP_CHAT, app
+from bot import AS_DOCUMENT, user_data, CUSTOM_FILENAME, EXTENSION_FILTER, DUMP_CHAT, app
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_media_streams, clean_unwanted
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 
@@ -52,9 +52,8 @@ class TgUploader:
                     except Exception as e:
                         if self.__is_cancelled:
                             return
-                        else:
-                            LOGGER.error(e)
-                            continue
+                        LOGGER.error(e)
+                        continue
                     self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
                         return
@@ -176,10 +175,10 @@ class TgUploader:
             self.uploaded_bytes += chunk_size
 
     def __user_settings(self):
-        if self.__listener.message.from_user.id in AS_DOC_USERS:
-            self.__as_doc = True
-        elif self.__listener.message.from_user.id in AS_MEDIA_USERS:
-            self.__as_doc = False
+        user_id = self.__listener.message.from_user.id
+        user_dict = user_data.get(user_id, False)
+        if user_dict:
+            self.__as_doc = user_dict.get('as_doc', False)
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
