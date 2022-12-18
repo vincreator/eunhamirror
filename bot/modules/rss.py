@@ -2,10 +2,9 @@ from feedparser import parse as feedparse
 from time import sleep
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from threading import Lock, Thread
-from copy import deepcopy
 
-from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND, AUTO_DELETE_MESSAGE_DURATION
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMarkup, auto_delete_message, sendRss
+from bot import dispatcher, job_queue, rss_dict, LOGGER, DATABASE_URL, config_dict, RSS_DELAY, RSS_CHAT_ID
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, auto_delete_message, sendRss
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
@@ -57,6 +56,7 @@ def rss_sub(update, context):
         title = args[1].strip()
         feed_link = args[2].strip()
         f_lists = []
+        filters = None
 
         if len(args) == 4:
             filters = args[3].lstrip().lower()
@@ -68,8 +68,6 @@ def rss_sub(update, context):
                    f_lists.append(y)
             else:
                 filters = None
-        else:
-            filters = None
 
         exists = rss_dict.get(title)
         if exists:
@@ -139,10 +137,10 @@ def rss_settings(update, context):
         buttons.sbutton("Pause", "rss pause")
     else:
         buttons.sbutton("Start", "rss start")
-    if AUTO_DELETE_MESSAGE_DURATION == -1:
+    if config_dict['AUTO_DELETE_MESSAGE_DURATION'] == -1:
         buttons.sbutton("Close", "rss close")
     button = buttons.build_menu(1)
-    setting = sendMarkup('Rss Settings', context.bot, update.message, button)
+    setting = sendMessage('Rss Settings', context.bot, update.message, button)
     Thread(target=auto_delete_message, args=(context.bot, update.message, setting)).start()
 
 def rss_set_update(update, context):
@@ -151,7 +149,7 @@ def rss_set_update(update, context):
     msg = query.message
     data = query.data
     data = data.split()
-    if not CustomFilters._owner_query(user_id):
+    if not CustomFilters.owner_query(user_id):
         query.answer(text="You don't have permission to use these buttons!", show_alert=True)
     elif data[1] == 'unsuball':
         query.answer()
@@ -184,8 +182,7 @@ def rss_monitor(context):
         if len(rss_dict) == 0:
             rss_job.enabled = False
             return
-        rss_saver = deepcopy(rss_dict)
-    for title, data in rss_saver.items():
+    for title, data in list(rss_dict.items()):
         try:
             rss_d = feedparse(data['link'])
             last_link = rss_d.entries[0]['link']
@@ -202,8 +199,8 @@ def rss_monitor(context):
                     LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {title}. Maybe you need to use less RSS_DELAY to not miss some torrents")
                     break
                 parse = True
-                for list in data['filters']:
-                    if all(x not in str(rss_d.entries[feed_count]['title']).lower() for x in list):
+                for flist in data['filters']:
+                    if all(x not in str(rss_d.entries[feed_count]['title']).lower() for x in flist):
                         parse = False
                         feed_count += 1
                         break
@@ -213,7 +210,7 @@ def rss_monitor(context):
                     url = rss_d.entries[feed_count]['links'][1]['href']
                 except IndexError:
                     url = rss_d.entries[feed_count]['link']
-                if RSS_COMMAND is not None:
+                if RSS_COMMAND := config_dict['RSS_COMMAND']:
                     feed_msg = f"{RSS_COMMAND} {url}"
                 else:
                     feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
@@ -222,6 +219,8 @@ def rss_monitor(context):
                 feed_count += 1
                 sleep(5)
             with rss_dict_lock:
+                if title not in rss_dict:
+                    continue
                 rss_dict[title].update({'last_feed': last_link, 'last_title': last_title})
             DbManger().rss_update(title)
             LOGGER.info(f"Feed Name: {title}")
@@ -230,18 +229,18 @@ def rss_monitor(context):
             LOGGER.error(f"{e} Feed Name: {title} - Feed Link: {data['link']}")
             continue
 
-if DB_URI is not None and RSS_CHAT_ID is not None:
+if DATABASE_URL and RSS_CHAT_ID:
     rss_list_handler = CommandHandler(BotCommands.RssListCommand, rss_list,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
     rss_get_handler = CommandHandler(BotCommands.RssGetCommand, rss_get,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
     rss_sub_handler = CommandHandler(BotCommands.RssSubCommand, rss_sub,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
     rss_unsub_handler = CommandHandler(BotCommands.RssUnSubCommand, rss_unsub,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
     rss_settings_handler = CommandHandler(BotCommands.RssSettingsCommand, rss_settings,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
-    rss_buttons_handler = CallbackQueryHandler(rss_set_update, pattern="rss", run_async=True)
+                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
+    rss_buttons_handler = CallbackQueryHandler(rss_set_update, pattern="rss")
 
     dispatcher.add_handler(rss_list_handler)
     dispatcher.add_handler(rss_get_handler)

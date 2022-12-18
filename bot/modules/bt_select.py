@@ -1,10 +1,10 @@
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from os import remove, path as ospath
 
-from bot import aria2, BASE_URL, download_dict, dispatcher, download_dict_lock, OWNER_ID, user_data, LOGGER
+from bot import aria2, download_dict, dispatcher, download_dict_lock, OWNER_ID, user_data, LOGGER
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus, bt_selection_buttons
 
 def select(update, context):
@@ -62,7 +62,7 @@ def select(update, context):
 
     SBUTTONS = bt_selection_buttons(id_)
     msg = "Your download paused. Choose files then press Done Selecting button to resume downloading."
-    sendMarkup(msg, context.bot, update.message, SBUTTONS)
+    sendMessage(msg, context.bot, update.message, SBUTTONS)
 
 def get_confirm(update, context):
     query = update.callback_query
@@ -115,12 +115,11 @@ def get_confirm(update, context):
                 LOGGER.error(f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         sendStatusMessage(listener.message, listener.bot)
         query.message.delete()
-        query.message.reply_to_message.delete()
 
 
 select_handler = CommandHandler(BotCommands.BtSelectCommand, select,
-                                filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user), run_async=True)
-bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel", run_async=True)
+                                filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user))
+bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel")
 
 dispatcher.add_handler(select_handler)
 dispatcher.add_handler(bts_handler)

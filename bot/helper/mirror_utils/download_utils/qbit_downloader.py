@@ -6,10 +6,10 @@ from re import search as re_search
 from os import remove
 from threading import Lock, Thread
 
-from bot import download_dict, download_dict_lock, BASE_URL, get_client, STOP_DUPLICATE, TORRENT_TIMEOUT, LOGGER, QbInterval
+from bot import download_dict, download_dict_lock, get_client, LOGGER, QbInterval, config_dict
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage, update_all_messages, sendFile
+from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval, bt_selection_buttons, getDownloadByGid, new_thread
 from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name
 
@@ -79,7 +79,7 @@ def add_qb_torrent(link, path, listener, ratio, seed_time):
                 QbInterval.append(periodic)
         listener.onDownloadStart()
         LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
-        if BASE_URL is not None and listener.select:
+        if config_dict['BASE_URL'] and listener.select:
             if link.startswith('magnet:'):
                 metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                 meta = sendMessage(metamsg, listener.bot, listener.message)
@@ -98,7 +98,7 @@ def add_qb_torrent(link, path, listener, ratio, seed_time):
             client.torrents_pause(torrent_hashes=ext_hash)
             SBUTTONS = bt_selection_buttons(ext_hash)
             msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-            sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
+            sendMessage(msg, listener.bot, listener.message, SBUTTONS)
         else:
             sendStatusMessage(listener.message, listener.bot)
     except Exception as e:
@@ -161,11 +161,10 @@ def __stop_duplicate(client, tor):
                 except:
                     qbname = None
             if qbname is not None:
-                cap, f_name = GoogleDriveHelper().drive_list(qbname, True)
-                if cap:
+                 qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
+                 if qbmsg:
                     __onDownloadError("File/Folder is already available in Drive.", client, tor)
-                    cap = f"Here are the search results:\n\n{cap}"
-                    sendFile(listener.bot, listener.message, f_name, cap)
+                    sendMessage("Here are the search results:", listener.bot, listener.message, button)
                     return
     except:
         pass
@@ -209,15 +208,19 @@ def __qb_listener():
         try:
             for tor_info in client.torrents_info():
                 if tor_info.state == "metaDL":
+                    TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
                     STALLED_TIME[tor_info.hash] = time()
-                    if TORRENT_TIMEOUT is not None and time() - tor_info.added_on >= TORRENT_TIMEOUT:
+                    if TORRENT_TIMEOUT and time() - tor_info.added_on >= TORRENT_TIMEOUT:
                         Thread(target=__onDownloadError, args=("Dead Torrent!", client, tor_info)).start()
+                    else:
+                        client.torrents_reannounce(torrent_hashes=tor_info.hash)
                 elif tor_info.state == "downloading":
                     STALLED_TIME[tor_info.hash] = time()
-                    if STOP_DUPLICATE and tor_info.hash not in STOP_DUP_CHECK:
+                    if config_dict['STOP_DUPLICATE'] and tor_info.hash not in STOP_DUP_CHECK:
                         STOP_DUP_CHECK.add(tor_info.hash)
                         __stop_duplicate(client, tor_info)
                 elif tor_info.state == "stalledDL":
+                    TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
                     if tor_info.hash not in RECHECKED and 0.99989999999999999 < tor_info.progress < 1:
                         msg = f"Force recheck - Name: {tor_info.name} Hash: "
                         msg += f"{tor_info.hash} Downloaded Bytes: {tor_info.downloaded} "
@@ -225,14 +228,16 @@ def __qb_listener():
                         LOGGER.error(msg)
                         client.torrents_recheck(torrent_hashes=tor_info.hash)
                         RECHECKED.add(tor_info.hash)
-                    elif TORRENT_TIMEOUT is not None and time() - STALLED_TIME.get(tor_info.hash, 0) >= TORRENT_TIMEOUT:
+                    elif TORRENT_TIMEOUT and time() - STALLED_TIME.get(tor_info.hash, 0) >= TORRENT_TIMEOUT:
                         Thread(target=__onDownloadError, args=("Dead Torrent!", client, tor_info)).start()
+                    else:
+                        client.torrents_reannounce(torrent_hashes=tor_info.hash)
                 elif tor_info.state == "missingFiles":
                     client.torrents_recheck(torrent_hashes=tor_info.hash)
                 elif tor_info.state == "error":
                     Thread(target=__onDownloadError, args=("No enough space for this torrent on device", client, tor_info)).start()
-                elif (tor_info.completion_on != 0 or tor_info.state.endswith("UP") or tor_info.state == "uploading") \
-                      and tor_info.hash not in UPLOADED and tor_info.state not in ['checkingUP', 'checkingDL']:
+                elif tor_info.completion_on != 0 and tor_info.hash not in UPLOADED and \
+                      tor_info.state not in ['checkingUP', 'checkingDL', 'checkingResumeData']:
                     UPLOADED.add(tor_info.hash)
                     __onDownloadComplete(client, tor_info)
                 elif tor_info.state in ['pausedUP', 'pausedDL'] and tor_info.hash in SEEDING:

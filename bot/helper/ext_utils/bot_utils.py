@@ -7,7 +7,7 @@ from psutil import virtual_memory, cpu_percent, disk_usage
 from requests import head as rhead
 from urllib.request import urlopen
 
-from bot import download_dict, download_dict_lock, STATUS_LIMIT, botStartTime, DOWNLOAD_DIR, WEB_PINCODE, BASE_URL, user_data
+from bot import download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, user_data, config_dict
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -89,7 +89,8 @@ def bt_selection_buttons(id_: str):
             break
 
     buttons = ButtonMaker()
-    if WEB_PINCODE:
+    BASE_URL = config_dict['BASE_URL']
+    if config_dict['WEB_PINCODE']:
         buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
         buttons.sbutton("Pincode", f"btsel pin {gid} {pincode}")
     else:
@@ -105,13 +106,12 @@ def get_progress_bar_string(status):
     cFull = p // 8
     p_str = '■' * cFull
     p_str += '□' * (12 - cFull)
-    p_str = f"[{p_str}]"
-    return p_str
+    return f"[{p_str}]"
 
 def get_readable_message():
     with download_dict_lock:
         msg = ""
-        if STATUS_LIMIT is not None:
+        if STATUS_LIMIT := config_dict['STATUS_LIMIT']:
             tasks = len(download_dict)
             globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
             if PAGE_NO > PAGES and PAGES != 0:
@@ -139,7 +139,7 @@ def get_readable_message():
                 msg += f"\n<b>Size: </b>{download.size()}"
             msg += f"\n<code>/{BotCommands.CancelMirror} {download.gid()}</code>"
             msg += "\n\n"
-            if STATUS_LIMIT is not None and index == STATUS_LIMIT:
+            if index == STATUS_LIMIT:
                 break
         if len(msg) == 0:
             return None, None
@@ -167,7 +167,7 @@ def get_readable_message():
         bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
         bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botStartTime)}"
         bmsg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
-        if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
+        if STATUS_LIMIT and tasks > STATUS_LIMIT:
             msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
             buttons = ButtonMaker()
             buttons.sbutton("<<", "status pre")
@@ -175,9 +175,10 @@ def get_readable_message():
             buttons.sbutton("♻️", "status ref")
             button = buttons.build_menu(3)
             return msg + bmsg, button
-        return msg + bmsg, ""
+        return msg + bmsg, None
 
 def turn(data):
+    STATUS_LIMIT = config_dict['STATUS_LIMIT']
     try:
         global COUNT, PAGE_NO
         with download_dict_lock:
@@ -265,7 +266,7 @@ def get_content_type(link: str) -> str:
             content_type = None
     return content_type
 
-def update_user_ldata(id_: int, key, value):
+def update_user_ldata(id_, key, value):
     if id_ in user_data:
         user_data[id_][key] = value
     else:

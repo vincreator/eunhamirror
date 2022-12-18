@@ -3,7 +3,7 @@ from time import time
 from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from bot import dispatcher, status_reply_dict_lock, download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL
+from bot import dispatcher, status_reply_dict_lock, download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, Interval, config_dict
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, turn, setInterval, new_thread
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -25,14 +25,10 @@ def mirror_status(update, context):
         sendStatusMessage(update.message, context.bot)
         deleteMessage(context.bot, update.message)
         with status_reply_dict_lock:
-            try:
-                if Interval:
-                    Interval[0].cancel()
-                    Interval.clear()
-            except:
-                pass
-            finally:
-                Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
+            if Interval:
+                Interval[0].cancel()
+                Interval.clear()
+                Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 
 @new_thread
 def status_pages(update, context):
@@ -49,8 +45,8 @@ def status_pages(update, context):
 
 
 mirror_status_handler = CommandHandler(BotCommands.StatusCommand, mirror_status,
-                                      filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-status_pages_handler = CallbackQueryHandler(status_pages, pattern="status", run_async=True)
+                                      filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+status_pages_handler = CallbackQueryHandler(status_pages, pattern="status")
 
 dispatcher.add_handler(mirror_status_handler)
 dispatcher.add_handler(status_pages_handler)
