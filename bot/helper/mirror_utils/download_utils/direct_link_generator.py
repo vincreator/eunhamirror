@@ -172,7 +172,7 @@ def zippy_share(url: str) -> str:
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
 
-def get_download_link(link: str):
+def dood_re(link: str):
     """ get download link from dood.re """
     from cfscrape import create_scraper
 
@@ -198,7 +198,13 @@ def get_download_link(link: str):
         download_link = soup.find('a', attrs={'data-href': True})['data-href']
     except TypeError:
         raise DirectDownloadLinkException('Tidak dapat menemukan link download di halaman dood.re')
-
+        
+     try:
+        # get the download link using the get_download_link function
+        download_link = get_download_link(link)
+    except DirectDownloadLinkException as e:
+        raise DirectDownloadLinkException(str(e))
+        
     # return the download link
     return download_link
 
