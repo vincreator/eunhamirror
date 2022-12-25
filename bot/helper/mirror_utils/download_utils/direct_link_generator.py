@@ -31,9 +31,7 @@ def direct_link_generator(link: str):
     if 'youtube.com' in link or 'youtu.be' in link:
         raise DirectDownloadLinkException("ERROR: Use ytdl cmds for Youtube links")
     elif 'dood.re' in link:
-        # ambil link download dari halaman dood.re
-        doodre = get_download_link(link)
-        return doodre
+        return doodre(link)
     elif 'yadi.sk' in link or 'disk.yandex.com' in link:
         return yandex_disk(link)
     elif 'mediafire.com' in link:
