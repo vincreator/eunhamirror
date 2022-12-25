@@ -175,20 +175,30 @@ def zippy_share(url: str) -> str:
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
 
-def get_download_link(link: str):
-    """ get download link from dood.re """
+def doodre(url: str) -> str:
+    """ Dood.re direct link generator """
+    # Set headers and cookies
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36',
-        'Referer': 'https://dood.re/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101 Firefox/78.0',
+        'Referer': url
     }
-    response = rget(link, headers=headers)
+    cookies = {
+        'PHPSESSID': 'your-session-id'
+    }
+
+    # Make request to dood.re
+    response = requests.get(url, headers=headers, cookies=cookies)
+    print(response)  # Add this line to print response
     if response.status_code != 200:
-        raise DirectDownloadLinkException(f'Error {response.status_code} accessing {link}')
+        return "Error: Unable to access dood.re"
+
+    # Extract download link from response
     soup = BeautifulSoup(response.text, 'html.parser')
     try:
         download_link = soup.find('a', attrs={'data-href': True})['data-href']
     except TypeError:
-        raise DirectDownloadLinkException('Tidak dapat menemukan link download di halaman dood.re')
+        return "Error: Unable to find download link on dood.re"
+
     return download_link
 
 def osdn(url: str) -> str:
