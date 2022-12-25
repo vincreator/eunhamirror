@@ -175,33 +175,20 @@ def zippy_share(url: str) -> str:
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
 
-def get_download_link(url: str) -> str:
-    """ Mendapatkan link download dari halaman dood.re """
-    # gunakan cfscrape untuk mengatasi proteksi Cloudflare
-    scraper = create_scraper()
-    response = scraper.get(url)
-    
-    # parsing halaman menggunakan BeautifulSoup
-    soup = BeautifulSoup(response.content, 'html.parser')
-    
-    # cek apakah halaman yang diberikan merupakan halaman dood.re yang valid
-    title = soup.find('title').text
-    if 'dood.re' not in title:
-        # cek apakah halaman merupakan halaman dari dood.re
-        if 'example.com' in title:
-            # jika halaman merupakan halaman dari dood.re, ekstrak link download dari situs tersebut
-            download_link = extract_link_from_example_com(url)
-        else:
-            raise DirectDownloadLinkException('Halaman yang diberikan bukan merupakan halaman dood.re atau situs web A yang valid')
-    
-    # jika halaman merupakan halaman dood.re yang valid, temukan elemen <a> yang memiliki atribut data-href yang berisi link download
-    download_link_element = soup.find('a', attrs={'data-href': True})
-    if download_link_element is not None:
-        download_link = download_link_element['data-href']
-    else:
-        # jika elemen <a> tidak ditemukan, kembalikan pesan error
+def get_download_link(link: str):
+    """ get download link from dood.re """
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36',
+        'Referer': 'https://dood.re/'
+    }
+    response = rget(link, headers=headers)
+    if response.status_code != 200:
+        raise DirectDownloadLinkException(f'Error {response.status_code} accessing {link}')
+    soup = BeautifulSoup(response.text, 'html.parser')
+    try:
+        download_link = soup.find('a', attrs={'data-href': True})['data-href']
+    except TypeError:
         raise DirectDownloadLinkException('Tidak dapat menemukan link download di halaman dood.re')
-    
     return download_link
 
 def osdn(url: str) -> str:
