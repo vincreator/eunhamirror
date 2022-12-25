@@ -190,7 +190,9 @@ def get_download_link(url: str) -> str:
         download_link = download_link_element['data-href']
     else:
         # jika elemen <a> tidak ditemukan, kembalikan pesan error
-        raise Direct
+        raise DirectDownloadLinkException('Tidak dapat menemukan link download di halaman dood.re')
+    
+    return download_link
 
 def osdn(url: str) -> str:
     """ OSDN direct link generator """
