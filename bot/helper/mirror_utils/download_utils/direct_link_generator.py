@@ -187,9 +187,14 @@ def get_download_link(url: str) -> str:
     # cek apakah halaman yang diberikan merupakan halaman dood.re yang valid
     title = soup.find('title').text
     if 'dood.re' not in title:
-        raise DirectDownloadLinkException('Halaman yang diberikan bukan merupakan halaman dood.re yang valid')
+        # cek apakah halaman merupakan halaman dari dood.re
+        if 'example.com' in title:
+            # jika halaman merupakan halaman dari dood.re, ekstrak link download dari situs tersebut
+            download_link = extract_link_from_example_com(url)
+        else:
+            raise DirectDownloadLinkException('Halaman yang diberikan bukan merupakan halaman dood.re atau situs web A yang valid')
     
-    # temukan elemen <a> yang memiliki atribut data-href yang berisi link download
+    # jika halaman merupakan halaman dood.re yang valid, temukan elemen <a> yang memiliki atribut data-href yang berisi link download
     download_link_element = soup.find('a', attrs={'data-href': True})
     if download_link_element is not None:
         download_link = download_link_element['data-href']
