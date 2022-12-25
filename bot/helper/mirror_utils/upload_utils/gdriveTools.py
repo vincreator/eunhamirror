@@ -596,7 +596,7 @@ class GoogleDriveHelper:
         for content in telegraph_content:
             path.append(
                 telegraph.create_page(
-                    title='-LeecMirrorh-Bot Drive Search',
+                    title='EunhaMirror Search',
                     content=content
                 )["path"]
             )

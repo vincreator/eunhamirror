@@ -30,6 +30,10 @@ def direct_link_generator(link: str):
     """ direct links generator """
     if 'youtube.com' in link or 'youtu.be' in link:
         raise DirectDownloadLinkException("ERROR: Use ytdl cmds for Youtube links")
+    elif 'dood.re' in link:
+        # ambil link download dari halaman dood.re
+        doodre = get_download_link(link)
+        return doodre
     elif 'yadi.sk' in link or 'disk.yandex.com' in link:
         return yandex_disk(link)
     elif 'mediafire.com' in link:
@@ -170,6 +174,16 @@ def zippy_share(url: str) -> str:
                     raise DirectDownloadLinkException("ERROR: Tidak dapat mengambil direct link")
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
+
+def get_download_link(url):
+    response = rget(url)
+    pages = BeautifulSoup(response.text, 'lxml')
+    dl_url = pages.find('a', {'id': 'download'})['href']
+    return dl_url
+
+def download_file(url):
+    r = requests.get(url, allow_redirects=True)
+    open('myfile.zip', 'wb').write(r.content)
 
 def osdn(url: str) -> str:
     """ OSDN direct link generator """
