@@ -185,9 +185,12 @@ def get_download_link(url: str) -> str:
     soup = BeautifulSoup(response.content, 'html.parser')
     
     # temukan elemen <a> yang memiliki atribut data-href yang berisi link download
-    download_link = soup.find('a', attrs={'data-href': True})['data-href']
-    
-    return download_link
+    download_link_element = soup.find('a', attrs={'data-href': True})
+    if download_link_element is not None:
+        download_link = download_link_element['data-href']
+    else:
+        # jika elemen <a> tidak ditemukan, kembalikan pesan error
+        raise Direct
 
 def osdn(url: str) -> str:
     """ OSDN direct link generator """
