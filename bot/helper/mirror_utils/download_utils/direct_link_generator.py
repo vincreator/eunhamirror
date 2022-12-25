@@ -25,7 +25,6 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
 
-
 def direct_link_generator(link: str):
     """ direct links generator """
     if 'youtube.com' in link or 'youtu.be' in link:
@@ -447,3 +446,12 @@ def uploadee(url: str) -> str:
         return sa['href']
     except:
         raise DirectDownloadLinkException(f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
+        
+ def dood_re(link: str) -> str:
+    """ dood.re direct link generator """
+    try:
+        # get the download link using the get_download_link function
+        download_link = get_download_link(link)
+    except DirectDownloadLinkException as e:
+        raise DirectDownloadLinkException(str(e))
+    return download_link
