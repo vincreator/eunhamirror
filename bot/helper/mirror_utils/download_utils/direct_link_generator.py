@@ -184,6 +184,11 @@ def get_download_link(url: str) -> str:
     # parsing halaman menggunakan BeautifulSoup
     soup = BeautifulSoup(response.content, 'html.parser')
     
+    # cek apakah halaman yang diberikan merupakan halaman dood.re yang valid
+    title = soup.find('title').text
+    if 'dood.re' not in title:
+        raise DirectDownloadLinkException('Halaman yang diberikan bukan merupakan halaman dood.re yang valid')
+    
     # temukan elemen <a> yang memiliki atribut data-href yang berisi link download
     download_link_element = soup.find('a', attrs={'data-href': True})
     if download_link_element is not None:
