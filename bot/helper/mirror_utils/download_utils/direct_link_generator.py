@@ -7,7 +7,7 @@
 from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no credit of the following code other
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
-
+import requests
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from math import pow as math_pow, floor as math_floor
@@ -31,7 +31,7 @@ def direct_link_generator(link: str):
     if 'youtube.com' in link or 'youtu.be' in link:
         raise DirectDownloadLinkException("ERROR: Use ytdl cmds for Youtube links")
     elif 'dood.re' in link:
-        return doodre(link)
+        return dood_re(link)
     elif 'yadi.sk' in link or 'disk.yandex.com' in link:
         return yandex_disk(link)
     elif 'mediafire.com' in link:
@@ -173,27 +173,34 @@ def zippy_share(url: str) -> str:
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
 
-def doodre(url: str) -> str:
-    """ Dood.re direct link generator """
-    # Set headers
+def get_download_link(link: str):
+    """ get download link from dood.re """
+    from cfscrape import create_scraper
+
+    # create a scraper object
+    scraper = create_scraper()
+
+    # send an HTTP request to dood.re using the scraper object
+    response = scraper.get(link)
+
+    # get the cookies from the response
+    cookies = response.cookies
+
+    # use the cookies to send an HTTP request to dood.re
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101 Firefox/78.0',
-        'Referer': url
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36',
+        'Referer': 'https://dood.re/'
     }
-
-    # Create session
-    session = requests.rsession()
-
-    # Send request to website
-    response = session.get(url, headers=headers)
+    response = scraper.get(link, cookies=cookies, headers=headers)
     if response.status_code != 200:
-        raise DirectDownloadLinkException(f'Error: Failed to access {url}. Status code: {response.status_code}')
-    
-    # Parse response
+        raise DirectDownloadLinkException(f'Error {response.status_code} accessing {link}')
     soup = BeautifulSoup(response.text, 'html.parser')
-    download_link = soup.find('a', attrs={'data-href': True})['data-href']
-    if not download_link:
-        raise DirectDownloadLinkException(f'Error: Failed to extract download link from {url}')
+    try:
+        download_link = soup.find('a', attrs={'data-href': True})['data-href']
+    except TypeError:
+        raise DirectDownloadLinkException('Tidak dapat menemukan link download di halaman dood.re')
+
+    # return the download link
     return download_link
 
 def osdn(url: str) -> str:
