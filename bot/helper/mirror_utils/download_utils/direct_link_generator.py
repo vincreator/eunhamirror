@@ -7,7 +7,7 @@
 from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no credit of the following code other
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
-import requests
+
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from math import pow as math_pow, floor as math_floor
@@ -25,12 +25,11 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
 
+
 def direct_link_generator(link: str):
     """ direct links generator """
     if 'youtube.com' in link or 'youtu.be' in link:
         raise DirectDownloadLinkException("ERROR: Use ytdl cmds for Youtube links")
-    elif 'dood.re' in link:
-        return dood_re(link)
     elif 'yadi.sk' in link or 'disk.yandex.com' in link:
         return yandex_disk(link)
     elif 'mediafire.com' in link:
@@ -171,39 +170,6 @@ def zippy_share(url: str) -> str:
                     raise DirectDownloadLinkException("ERROR: Tidak dapat mengambil direct link")
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
-
-def dood_re(link: str) -> str:
-    """ get download link from dood.re """
-    # create a scraper object
-    scraper = create_scraper()
-
-    # send an HTTP request to dood.re using the scraper object
-    response = scraper.get(link)
-
-    # get the cookies from the response
-    cookies = response.cookies
-
-    # use the cookies to send an HTTP request to dood.re
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36',
-        'Referer': 'https://dood.re/'
-    }
-    response = scraper.get(link, cookies=cookies, headers=headers)
-    if response.status_code != 200:
-        raise DirectDownloadLinkException(f'Error {response.status_code} accessing {link}')
-    soup = BeautifulSoup(response.text, 'html.parser')
-    try:
-        download_link = soup.find('a', attrs={'data-href': True})['data-href']
-    except TypeError:
-        raise DirectDownloadLinkException('Tidak dapat menemukan link download di halaman dood.re')
-
-    # return the download link
-    return download_link
-
-# example usage
-link = 'https://dood.re/file/example'
-download_link = dood_re(link)
-print(download_link)
 
 def osdn(url: str) -> str:
     """ OSDN direct link generator """
@@ -449,12 +415,3 @@ def uploadee(url: str) -> str:
         return sa['href']
     except:
         raise DirectDownloadLinkException(f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
-        
- def dood_re(link: str) -> str:
-    """ dood.re direct link generator """
-    try:
-        # get the download link using the get_download_link function
-        download_link = get_download_link(link)
-    except DirectDownloadLinkException as e:
-        raise DirectDownloadLinkException(str(e))
-    return download_link
