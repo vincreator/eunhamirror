@@ -182,7 +182,7 @@ def doodre(url: str) -> str:
     }
 
     # Create session
-    session = requests.Session()
+    session = requests.rsession()
 
     # Send request to website
     response = session.get(url, headers=headers)
