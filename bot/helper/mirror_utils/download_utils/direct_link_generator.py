@@ -175,15 +175,19 @@ def zippy_share(url: str) -> str:
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
 
-def get_download_link(url):
-    response = rget(url)
-    pages = BeautifulSoup(response.text, 'lxml')
-    dl_url = pages.find('a', {'id': 'download'})['href']
-    return dl_url
-
-def download_file(url):
-    r = requests.get(url, allow_redirects=True)
-    open('myfile.zip', 'wb').write(r.content)
+def get_download_link(url: str) -> str:
+    """ Mendapatkan link download dari halaman dood.re """
+    # gunakan cfscrape untuk mengatasi proteksi Cloudflare
+    scraper = create_scraper()
+    response = scraper.get(url)
+    
+    # parsing halaman menggunakan BeautifulSoup
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    # temukan elemen <a> yang memiliki atribut data-href yang berisi link download
+    download_link = soup.find('a', attrs={'data-href': True})['data-href']
+    
+    return download_link
 
 def osdn(url: str) -> str:
     """ OSDN direct link generator """
