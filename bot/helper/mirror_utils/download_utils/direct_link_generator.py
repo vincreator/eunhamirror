@@ -137,7 +137,7 @@ def mediafire(url: str) -> str:
     info = page.find('a', {'aria-label': 'Download file'})
     return info.get('href')
   
-def doodstream(url: str) -> dict:
+def doodstream(url: str) -> str:
     """ DoodStream downloader """
     try:
         # Extract the video information using Beautiful Soup
@@ -153,7 +153,7 @@ def doodstream(url: str) -> dict:
     except Exception as e:
         # Log the error
         logger.error(f'Error extracting video information: {e}')
-        return {}
+        return ''
 
     try:
         # Download the video using requests
@@ -166,19 +166,13 @@ def doodstream(url: str) -> dict:
         # Print the log to the console
         print(logger.info(f'Started download of {title}'))
 
-        # Return a dictionary containing information about the video
-        return {
-            'id': video_id,
-            'title': title,
-            'url': final_url,
-            'description': description,
-            'thumbnail': thumbnail
-        }
+        # Return a string containing information about the video
+        return f'{title}\n{final_url}\n{description}\n{thumbnail}'
     except Exception as e:
         # Log the error
         logger.error(f'Error downloading video: {e}')
-        return {}
-  
+        return ''
+      
 def zippy_share(url: str) -> str:
     base_url = re_search('http.+.zippyshare.com', url).group()
     response = rget(url)
