@@ -34,6 +34,8 @@ def direct_link_generator(link: str):
         return yandex_disk(link)
     elif 'mediafire.com' in link:
         return mediafire(link)
+    elif 'doodstream.com' in link:
+        return doodstream(link)
     elif 'zippyshare.com' in (link):
         return zippy_share(link)
     elif 'uptobox.com' in link:
@@ -134,7 +136,19 @@ def mediafire(url: str) -> str:
     page = BeautifulSoup(rget(link).content, 'lxml')
     info = page.find('a', {'aria-label': 'Download file'})
     return info.get('href')
+  
+def doodstream(url: str) -> str:
+    """ DoodStream direct link generator """
+    try:
+        link = re_findall(r'\bhttps?://.*doodstream\.com\S+', url)[0]
+    except IndexError:
+        raise DirectDownloadLinkException("No DoodStream links found")
 
+    # Use Beautiful Soup to extract the download URL
+    page = BeautifulSoup(rget(link).content, 'lxml')
+    info = page.find('a', {'class': 'download'})
+    return info.get('href')
+  
 def zippy_share(url: str) -> str:
     base_url = re_search('http.+.zippyshare.com', url).group()
     response = rget(url)
