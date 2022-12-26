@@ -34,7 +34,7 @@ def direct_link_generator(link: str):
         return yandex_disk(link)
     elif 'mediafire.com' in link:
         return mediafire(link)
-    elif 'doodstream.com' in link:
+    elif 'dood.re' in link:
         return doodstream(link)
     elif 'zippyshare.com' in (link):
         return zippy_share(link)
@@ -139,39 +139,41 @@ def mediafire(url: str) -> str:
   
 def doodstream(url: str) -> str:
     """ DoodStream downloader """
+    result = {}
     try:
         # Extract the video information using Beautiful Soup
         page = BeautifulSoup(requests.get(link).content, 'lxml')
-        title = page.find('h1', {'class': 'title'}).text
-        thumbnail = page.find('img', {'class': 'thumbnail'}).get('src')
-        description = page.find('div', {'class': 'description'}).text
+        result['id'] = url.split('/')[-1]
+        result['title'] = page.find('h1', {'class': 'title'}).text
+        result['thumbnail'] = page.find('img', {'class': 'thumbnail'}).get('src')
+        result['description'] = page.find('div', {'class': 'description'}).text
 
         # Extract the final URL for the video
         token = page.find('input', {'name': 'token'}).get('value')
         auth_url = page.find('input', {'name': 'auth_url'}).get('value')
-        final_url = requests.post(auth_url, data={'token': token}).json()['url']
+        result['final_url'] = requests.post(auth_url, data={'token': token}).json()['url']
     except Exception as e:
         # Log the error
         logger.error(f'Error extracting video information: {e}')
-        return ''
+        raise DirectDownloadLinkException("ERROR: Tidak dapat mengambil informasi video")
 
     try:
         # Download the video using requests
-        response = requests.get(final_url)
-        open(f'/path/to/download/directory/{title}', 'wb').write(response.content)
+        response = requests.get(result['final_url'])
+        open(f'/path/to/download/directory/{result['title']}', 'wb').write(response.content)
 
         # Log the download information
-        logger.info(f'Started download of {title}')
+        logger.info(f'Mulai mengunduh {result['title']}')
 
         # Print the log to the console
-        print(logger.info(f'Started download of {title}'))
+        print(logger.info(f'Mulai mengunduh {result['title']}'))
 
         # Return a string containing information about the video
-        return f'{title}\n{final_url}\n{description}\n{thumbnail}'
+        return f"id: {result['id']}\ntitle: {result['title']}\nfinal_url: {result['final_url']}\ndescription: {result['description']}\nthumbnail: {result['thumbnail']}"
     except Exception as e:
         # Log the error
         logger.error(f'Error downloading video: {e}')
-        return ''
+        raise DirectDownloadLinkException("ERROR: Tidak dapat mengunduh video")
       
 def zippy_share(url: str) -> str:
     base_url = re_search('http.+.zippyshare.com', url).group()
