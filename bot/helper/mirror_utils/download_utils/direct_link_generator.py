@@ -137,17 +137,47 @@ def mediafire(url: str) -> str:
     info = page.find('a', {'aria-label': 'Download file'})
     return info.get('href')
   
-def doodstream(url: str) -> str:
-    """ DoodStream direct link generator """
+def doodstream(url: str) -> dict:
+    """ DoodStream downloader """
     try:
-        link = re_findall(r'\bhttps?://.*doodstream\.com\S+', url)[0]
-    except IndexError:
-        raise DirectDownloadLinkException("No DoodStream links found")
+        # Extract the video information using Beautiful Soup
+        page = BeautifulSoup(requests.get(link).content, 'lxml')
+        title = page.find('h1', {'class': 'title'}).text
+        thumbnail = page.find('img', {'class': 'thumbnail'}).get('src')
+        description = page.find('div', {'class': 'description'}).text
 
-    # Use Beautiful Soup to extract the download URL
-    page = BeautifulSoup(rget(link).content, 'lxml')
-    info = page.find('a', {'class': 'download'})
-    return info.get('href')
+        # Extract the final URL for the video
+        token = page.find('input', {'name': 'token'}).get('value')
+        auth_url = page.find('input', {'name': 'auth_url'}).get('value')
+        final_url = requests.post(auth_url, data={'token': token}).json()['url']
+    except Exception as e:
+        # Log the error
+        logger.error(f'Error extracting video information: {e}')
+        return {}
+
+    try:
+        # Download the video using requests
+        response = requests.get(final_url)
+        open(f'/path/to/download/directory/{title}', 'wb').write(response.content)
+
+        # Log the download information
+        logger.info(f'Started download of {title}')
+
+        # Print the log to the console
+        print(logger.info(f'Started download of {title}'))
+
+        # Return a dictionary containing information about the video
+        return {
+            'id': video_id,
+            'title': title,
+            'url': final_url,
+            'description': description,
+            'thumbnail': thumbnail
+        }
+    except Exception as e:
+        # Log the error
+        logger.error(f'Error downloading video: {e}')
+        return {}
   
 def zippy_share(url: str) -> str:
     base_url = re_search('http.+.zippyshare.com', url).group()
