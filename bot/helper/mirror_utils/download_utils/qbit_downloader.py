@@ -4,18 +4,21 @@ from bencoding import bencode, bdecode
 from time import sleep, time
 from re import search as re_search
 from os import remove
+from time import sleep, time
+from re import search as re_search
 from threading import Lock, Thread
 
-from bot import download_dict, download_dict_lock, get_client, LOGGER, QbInterval, config_dict
+from bot import download_dict, download_dict_lock, get_client, config_dict, QbInterval, user_data, LOGGER, OWNER_ID
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, sendStatusMessage, update_all_messages
-from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval, bt_selection_buttons, getDownloadByGid, new_thread
-from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name
+from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, sendStatusMessage, update_all_messages, sendFile
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, setInterval, bt_selection_buttons, getDownloadByGid, new_thread, is_sudo, is_paid, getdailytasks, userlistype
+from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name, check_storage_threshold
 
 qb_download_lock = Lock()
 STALLED_TIME = {}
 STOP_DUP_CHECK = set()
+LIMITS_CHECK = set()
 RECHECKED = set()
 UPLOADED = set()
 SEEDING = set()
@@ -72,6 +75,7 @@ def add_qb_torrent(link, path, listener, ratio, seed_time):
         ext_hash = tor_info.hash
         with download_dict_lock:
             download_dict[listener.uid] = QbDownloadStatus(listener, ext_hash)
+            LOGGER.info(download_dict)
         with qb_download_lock:
             STALLED_TIME[ext_hash] = time()
             if not QbInterval:
@@ -150,7 +154,10 @@ def __stop_duplicate(client, tor):
     download = getDownloadByGid(tor.hash[:12])
     try:
         listener = download.listener()
-        if not listener.select and not listener.isLeech:
+        user_id = listener.message.from_user.id
+        user_dict = user_data.get(user_id, False)
+        IS_USRTD = user_dict.get('is_usertd') if user_dict and user_dict.get('is_usertd') else False
+        if not listener.select and not listener.isLeech and IS_USRTD == False:
             LOGGER.info('Checking File/Folder if already in Drive')
             qbname = tor.content_path.rsplit('/', 1)[-1].rsplit('.!qB', 1)[0]
             if listener.isZip:
@@ -161,13 +168,72 @@ def __stop_duplicate(client, tor):
                 except:
                     qbname = None
             if qbname is not None:
-                 qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
-                 if qbmsg:
+                qbmsg, button = GoogleDriveHelper(user_id=user_id).drive_list(qbname, True)
+                if qbmsg:
                     __onDownloadError("File/Folder is already available in Drive.", client, tor)
-                    sendMessage("Here are the search results:", listener.bot, listener.message, button)
+                    tegr, html, tgdi = userlistype(user_id)
+                    if tegr:
+                        sendMessage("Here are the search results:", listener.bot, listener.message, button)
+                    elif html:
+                        sendFile(listener.bot, listener.message, button, f"Here are the search results:\n\n{qbmsg}")
+                    else:
+                        sendMessage(qbmsg, listener.bot, listener.message, button)
                     return
     except:
         pass
+
+@new_thread
+def __check_limits(client, tor):
+    download = getDownloadByGid(tor.hash[:12])
+    listener = download.listener()
+    size = tor.size
+    arch = any([listener.isZip, listener.extract])
+    user_id = listener.message.from_user.id
+    TORRENT_DIRECT_LIMIT = config_dict['TORRENT_DIRECT_LIMIT']
+    ZIP_UNZIP_LIMIT = config_dict['ZIP_UNZIP_LIMIT']
+    LEECH_LIMIT = config_dict['LEECH_LIMIT']
+    STORAGE_THRESHOLD = config_dict['STORAGE_THRESHOLD']
+    if any([ZIP_UNZIP_LIMIT, LEECH_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]) and user_id != OWNER_ID and not is_sudo(user_id) and not is_paid(user_id):
+        if STORAGE_THRESHOLD is not None:
+            acpt = check_storage_threshold(size, arch)
+            if not acpt:
+                msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+                if config_dict['PAID_SERVICE'] is True:
+                    msg += f'\n#Buy Paid Service'
+                __onDownloadError(msg, client, tor)
+                return
+                limit = None
+        if ZIP_UNZIP_LIMIT and arch:
+            mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'
+            limit = ZIP_UNZIP_LIMIT
+        if LEECH_LIMIT and listener.isLeech:
+            mssg = f'Leech limit is {LEECH_LIMIT}GB'
+            limit = LEECH_LIMIT
+        elif TORRENT_DIRECT_LIMIT is not None:
+            mssg = f'Torrent limit is {TORRENT_DIRECT_LIMIT}GB'
+            limit = TORRENT_DIRECT_LIMIT
+        if config_dict['PAID_SERVICE'] is True:
+            mssg += f'\n#Buy Paid Service'
+        if limit is not None:
+            LOGGER.info('Checking File/Folder Size...')
+            if size > limit * 1024**3:
+                fmsg = f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}"
+                __onDownloadError(fmsg, client, tor)
+    DAILY_MIRROR_LIMIT = config_dict['DAILY_MIRROR_LIMIT'] * 1024**3 if config_dict['DAILY_MIRROR_LIMIT'] else config_dict['DAILY_MIRROR_LIMIT']
+    DAILY_LEECH_LIMIT = config_dict['DAILY_LEECH_LIMIT'] * 1024**3 if config_dict['DAILY_LEECH_LIMIT'] else config_dict['DAILY_LEECH_LIMIT']
+    if DAILY_MIRROR_LIMIT and not listener.isLeech and user_id != OWNER_ID and not is_sudo(user_id) and not is_paid(user_id) and (size >= (DAILY_MIRROR_LIMIT - getdailytasks(user_id, check_mirror=True)) or DAILY_MIRROR_LIMIT <= getdailytasks(user_id, check_mirror=True)):
+        mssg = f"Daily Mirror Limit is {get_readable_file_size(DAILY_MIRROR_LIMIT)}\nYou have exhausted Today's Mirror Limit or Size of your Mirror is greater than free Limits.\n#TRY_AGAIN_TOMORROW #Daily_Mirror_Limit"
+        if config_dict['PAID_SERVICE'] is True:
+            mssg += f'\n#Buy Paid Service'
+        __onDownloadError(mssg, client, tor)
+    elif not listener.isLeech: msize = getdailytasks(user_id, upmirror=size, check_mirror=True); LOGGER.info(f"User : {user_id} | Daily Mirror Size : {get_readable_file_size(msize)}")
+    if DAILY_LEECH_LIMIT and listener.isLeech and user_id != OWNER_ID and not is_sudo(user_id) and not is_paid(user_id) and (size >= (DAILY_LEECH_LIMIT - getdailytasks(user_id, check_leech=True)) or DAILY_LEECH_LIMIT <= getdailytasks(user_id, check_leech=True)):
+        mssg = f"Daily Leech Limit is {get_readable_file_size(DAILY_LEECH_LIMIT)}\nYou have exhausted Today's Leech Limit or Size of your Leech is greater than free Limits.\n#TRY_AGAIN_TOMORROW #Daily_Leech_Limit"
+        if config_dict['PAID_SERVICE'] is True:
+            mssg += f'\n#Buy Paid Service'
+        __onDownloadError(mssg, client, tor)
+    elif listener.isLeech: lsize = getdailytasks(user_id, upleech=size, check_leech=True); LOGGER.info(f"User : {user_id} | Daily Leech Size : {get_readable_file_size(lsize)}")
 
 @new_thread
 def __onDownloadComplete(client, tor):
@@ -219,6 +285,9 @@ def __qb_listener():
                     if config_dict['STOP_DUPLICATE'] and tor_info.hash not in STOP_DUP_CHECK:
                         STOP_DUP_CHECK.add(tor_info.hash)
                         __stop_duplicate(client, tor_info)
+                    if (config_dict['TORRENT_DIRECT_LIMIT'] or config_dict['ZIP_UNZIP_LIMIT'] or config_dict['LEECH_LIMIT'] or config_dict['STORAGE_THRESHOLD'] or config_dict['DAILY_MIRROR_LIMIT'] or config_dict['DAILY_LEECH_LIMIT']) and tor_info.hash not in LIMITS_CHECK:
+                        LIMITS_CHECK.add(tor_info.hash)
+                        __check_limits(client, tor_info)
                 elif tor_info.state == "stalledDL":
                     TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
                     if tor_info.hash not in RECHECKED and 0.99989999999999999 < tor_info.progress < 1:

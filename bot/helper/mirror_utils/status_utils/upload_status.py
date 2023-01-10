@@ -1,4 +1,4 @@
-from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time, EngineStatus
 
 
 class UploadStatus:
@@ -7,6 +7,7 @@ class UploadStatus:
         self.__size = size
         self.__gid = gid
         self.message = listener.message
+
 
     def processed_bytes(self):
         return self.__obj.processed_bytes
@@ -53,3 +54,6 @@ class UploadStatus:
 
     def download(self):
         return self.__obj
+
+    def eng(self):
+        return EngineStatus.STATUS_GD

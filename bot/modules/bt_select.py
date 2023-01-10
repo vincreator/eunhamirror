@@ -36,7 +36,7 @@ def select(update, context):
        (user_id not in user_data or not user_data[user_id].get('is_sudo')):
         sendMessage("This task is not for you!", context.bot, update.message)
         return
-    if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_WAITING]:
+    if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_QUEUEDL]:
         sendMessage('Task should be in download or pause (incase message deleted by wrong) or queued (status incase you used torrent file)!', context.bot, update.message)
         return
     if dl.name().startswith('[METADATA]'):
@@ -120,6 +120,5 @@ def get_confirm(update, context):
 select_handler = CommandHandler(BotCommands.BtSelectCommand, select,
                                 filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user))
 bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel")
-
 dispatcher.add_handler(select_handler)
 dispatcher.add_handler(bts_handler)

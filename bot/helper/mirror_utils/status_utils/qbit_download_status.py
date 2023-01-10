@@ -1,7 +1,7 @@
 from time import sleep
 
 from bot import LOGGER, get_client
-from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time, EngineStatus
 
 def get_download(client, hash_):
     try:
@@ -62,7 +62,7 @@ class QbDownloadStatus:
         self.__update()
         download = self.__info.state
         if download in ["queuedDL", "queuedUP"]:
-            return MirrorStatus.STATUS_WAITING
+            return MirrorStatus.STATUS_QUEUEDL
         elif download in ["pausedDL", "pausedUP"]:
             return MirrorStatus.STATUS_PAUSED
         elif download in ["checkingUP", "checkingDL"]:
@@ -105,6 +105,9 @@ class QbDownloadStatus:
 
     def listener(self):
         return self.__listener
+
+    def eng(self):
+        return EngineStatus.STATUS_QB
 
     def cancel_download(self):
         self.__client.torrents_pause(torrent_hashes=self.__hash)

@@ -4,7 +4,7 @@ from time import sleep
 from telegraph import Telegraph
 from telegraph.exceptions import RetryAfterError
 
-from bot import LOGGER
+from bot import LOGGER, config_dict
 
 
 class TelegraphHelper:
@@ -50,9 +50,10 @@ class TelegraphHelper:
         except RetryAfterError as st:
             LOGGER.warning(f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
             sleep(st.retry_after)
-            return self.edit_page(path, title, content)
+        return self.edit_page(path, title, content)
 
     def edit_telegraph(self, path, telegraph_content):
+        TITLE_NAME = config_dict['TITLE_NAME']
         nxt_page = 1
         prev_page = 0
         num_of_path = len(path)
@@ -69,10 +70,16 @@ class TelegraphHelper:
                     nxt_page += 1
             self.edit_page(
                 path = path[prev_page],
-                title = 'Mirror-leech-bot Torrent Search',
+                title = f"{config_dict['TITLE_NAME']} Torrent Search",
                 content=content
             )
         return
 
-
-telegraph=TelegraphHelper('Mirror-Leech-Telegram-Bot', 'https://github.com/anasty17/mirror-leech-telegram-bot')
+try:
+    AUTHOR_NAME = config_dict['AUTHOR_NAME']
+    AUTHOR_URL = config_dict['AUTHOR_URL']
+    telegraph=TelegraphHelper(f"{config_dict['AUTHOR_NAME']}", f"{config_dict['AUTHOR_URL']}")
+except Exception as err:
+    LOGGER.warning(f"Can't Create Telegraph Account: {err}")
+    telegraph = None
+    pass

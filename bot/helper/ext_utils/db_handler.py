@@ -73,6 +73,7 @@ class DbManger:
         self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': {key: value}}, upsert=True)
         self.__conn.close()
 
+
     def update_private_file(self, path):
         if self.__err:
             return
@@ -88,8 +89,8 @@ class DbManger:
     def update_user_data(self, user_id):
         if self.__err:
             return
-        data = user_data[user_id]
-        if data.get('thumb'):
+        data = user_data.get(user_id)
+        if data and data.get('thumb'):
             del data['thumb']
         self.__db.users.update_one({'_id': user_id}, {'$set': data}, upsert=True)
         self.__conn.close()
@@ -105,9 +106,19 @@ class DbManger:
         self.__db.users.update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
         self.__conn.close()
 
-    def rss_update(self, title):
+    def update_userval(self, user_id, data, value=None):
         if self.__err:
             return
+        if value is not None:
+            dbval = value
+        else:
+            dbval = False
+        self.__db.users.update_one({'_id': user_id}, {'$set': {data: dbval}}, upsert=True)
+        self.__conn.close()
+
+    def rss_update(self, title):
+        if self.__err:
+            return   
         self.__db.rss[bot_id].update_one({'_id': title}, {'$set': rss_dict[title]}, upsert=True)
         self.__conn.close()
 
@@ -148,7 +159,6 @@ class DbManger:
         self.__conn.close()
         return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}
 
-
     def trunc_table(self, name):
         if self.__err:
             return
@@ -157,4 +167,3 @@ class DbManger:
 
 if DATABASE_URL:
     DbManger().db_load()
-
