@@ -17,6 +17,7 @@ class AriaDownloadStatus:
         self.__gid = gid
         self.__download = get_download(gid)
         self.__listener = listener
+        self.md5sum = None
         self.start_time = 0
         self.seeding = seeding
         self.message = listener.message
