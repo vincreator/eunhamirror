@@ -4,7 +4,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from threading import Lock, Thread
 
 from bot import dispatcher, job_queue, rss_dict, LOGGER, DATABASE_URL, config_dict, RSS_DELAY, RSS_CHAT_ID
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMessage, auto_delete_message, sendRss
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, auto_delete_message, sendRss
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
@@ -69,8 +69,7 @@ def rss_sub(update, context):
             else:
                 filters = None
 
-        exists = rss_dict.get(title)
-        if exists:
+        if rss_dict.get(title):
             return sendMessage("This title already subscribed! Choose another title!", context.bot, update.message)
         try:
             rss_d = feedparse(feed_link)
@@ -117,16 +116,15 @@ def rss_sub(update, context):
 def rss_unsub(update, context):
     try:
         title = context.args[0]
-        exists = rss_dict.get(title)
-        if not exists:
-            msg = "Rss link not exists! Nothing removed!"
-            sendMessage(msg, context.bot, update.message)
-        else:
+        if rss_dict.get(title):
             DbManger().rss_delete(title)
             with rss_dict_lock:
                 del rss_dict[title]
             sendMessage(f"Rss link with Title: <code>{title}</code> has been removed!", context.bot, update.message)
             LOGGER.info(f"Rss link with Title: {title} has been removed!")
+        else:
+            msg = "Rss link not exists! Nothing removed!"
+            sendMessage(msg, context.bot, update.message)
     except IndexError:
         sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand[0]} Title", context.bot, update.message)
 
@@ -211,7 +209,7 @@ def rss_monitor(context):
                 except IndexError:
                     url = rss_d.entries[feed_count]['link']
                 if RSS_COMMAND := config_dict['RSS_COMMAND']:
-                    feed_msg = f"{RSS_COMMAND} {url}"
+                    feed_msg = f"/{RSS_COMMAND.replace('/', '')} {url}"
                 else:
                     feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
                     feed_msg += f"<b>Link: </b><code>{url}</code>"

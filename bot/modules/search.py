@@ -193,7 +193,7 @@ def __getResult(search_results, key, message, method):
                         if 'torrent' in subres.keys():
                             msg += f"<a href='{subres['torrent']}'>Direct Link</a><br>"
                         elif 'magnet' in subres.keys():
-                            msg += f"<b>Share Magnet to</b> "
+                            msg += "<b>Share Magnet to</b> "
                             msg += f"<a href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a><br>"
                     msg += '<br>'
                 else:
@@ -205,7 +205,7 @@ def __getResult(search_results, key, message, method):
                     if 'torrent' in result.keys():
                         msg += f"<a href='{result['torrent']}'>Direct Link</a><br><br>"
                     elif 'magnet' in result.keys():
-                        msg += f"<b>Share Magnet to</b> "
+                        msg += "<b>Share Magnet to</b> "
                         msg += f"<a href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a><br><br>"
                     else:
                         msg += '<br>'
@@ -232,7 +232,7 @@ def __getResult(search_results, key, message, method):
         telegraph_content.append(msg)
 
     editMessage(f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
-    path = [telegraph.create_page(title=f"{config_dict['TITLE_NAME']}",
+    path = [telegraph.create_page(title='Mirror-leech-bot Torrent Search',
                                   content=content)["path"] for content in telegraph_content]
     if len(path) > 1:
         editMessage(f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)

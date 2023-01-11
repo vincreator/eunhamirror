@@ -1,10 +1,4 @@
 config.env
-Thumbnails/*
-list_drives.txt
-categories.txt
-cookies.txt
-terabox.txt
-downloads
 *auth_token.txt
 *.pyc
 data*
@@ -14,7 +8,8 @@ data*
 *.pickle
 .netrc
 log.txt
-authorized_chats.txt
-sudo_users.txt
 accounts/*
-cookies/*
+Thumbnails/*
+list_drives.txt
+cookies.txt
+downloads

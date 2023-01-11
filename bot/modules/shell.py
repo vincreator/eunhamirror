@@ -1,15 +1,17 @@
 from subprocess import Popen, PIPE
 from telegram.ext import CommandHandler
+
 from bot import LOGGER, dispatcher
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
+
 
 def shell(update, context):
     message = update.effective_message
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:
-        return message.reply_text('No command to execute was given.', parse_mode='HTML')
-    cmd = cmd[1].strip()
+        return message.reply_text('No command to execute was given.')
+    cmd = cmd[1]
     process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     stdout, stderr = process.communicate()
     reply = ''
@@ -36,6 +38,6 @@ def shell(update, context):
         message.reply_text('No Reply', parse_mode='Markdown')
 
 
-SHELL_HANDLER = CommandHandler(BotCommands.ShellCommand, shell,
-                               filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
+SHELL_HANDLER = CommandHandler(BotCommands.ShellCommand, shell, filters=CustomFilters.owner_filter)
+
 dispatcher.add_handler(SHELL_HANDLER)

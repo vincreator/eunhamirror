@@ -120,5 +120,6 @@ def get_confirm(update, context):
 select_handler = CommandHandler(BotCommands.BtSelectCommand, select,
                                 filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user))
 bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel")
+
 dispatcher.add_handler(select_handler)
 dispatcher.add_handler(bts_handler)

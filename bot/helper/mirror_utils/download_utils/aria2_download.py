@@ -1,13 +1,14 @@
-from re import match
+import hashlib
 from time import sleep, time
 from os import remove, path as ospath
-from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict, user_data, aria2_options, aria2c_global, OWNER_ID
+
+from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict, aria2_options, aria2c_global
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, bt_selection_buttons, get_readable_file_size, is_sudo, is_paid, getdailytasks, userlistype
+from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, bt_selection_buttons
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage, deleteMessage, update_all_messages, sendFile
-from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold, clean_unwanted
-from bot.modules.scraper import indexScrape
+from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage, deleteMessage, update_all_messages
+from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
+
 
 @new_thread
 def __onDownloadStarted(api, gid):
@@ -25,30 +26,20 @@ def __onDownloadStarted(api, gid):
                         deleteMessage(listener.bot, meta)
                         break
                     download = download.live
+        return
     else:
         LOGGER.info(f'onDownloadStarted: {download.name} - Gid: {gid}')
     try:
-        STOP_DUPLICATE = config_dict['STOP_DUPLICATE']
-        TORRENT_DIRECT_LIMIT = config_dict['TORRENT_DIRECT_LIMIT']
-        ZIP_UNZIP_LIMIT = config_dict['ZIP_UNZIP_LIMIT']
-        LEECH_LIMIT = config_dict['LEECH_LIMIT']
-        STORAGE_THRESHOLD = config_dict['STORAGE_THRESHOLD']
-        DAILY_MIRROR_LIMIT = config_dict['DAILY_MIRROR_LIMIT'] * 1024**3 if config_dict['DAILY_MIRROR_LIMIT'] else config_dict['DAILY_MIRROR_LIMIT']
-        DAILY_LEECH_LIMIT = config_dict['DAILY_LEECH_LIMIT'] * 1024**3 if config_dict['DAILY_LEECH_LIMIT'] else config_dict['DAILY_LEECH_LIMIT']
-        if any([STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LEECH_LIMIT, STORAGE_THRESHOLD, DAILY_MIRROR_LIMIT, DAILY_LEECH_LIMIT]):
+        if config_dict['STOP_DUPLICATE']:
             sleep(1)
             if dl := getDownloadByGid(gid):
                 listener = dl.listener()
-                if listener.select:
+                if listener.isLeech or listener.select:
                     return
                 download = api.get_download(gid)
                 if not download.is_torrent:
                     sleep(3)
                     download = download.live
-            user_id = listener.message.from_user.id
-            user_dict = user_data.get(user_id, False)
-            IS_USRTD = user_data[user_id].get('is_usertd') if user_dict and user_dict.get('is_usertd') else False
-            if STOP_DUPLICATE and not dl.listener().isLeech and IS_USRTD == False:
                 LOGGER.info('Checking File/Folder if already in Drive...')
                 sname = download.name
                 if listener.isZip:
@@ -59,92 +50,83 @@ def __onDownloadStarted(api, gid):
                     except:
                         sname = None
                 if sname is not None:
-                    smsg, button = GoogleDriveHelper(user_id=user_id).drive_list(sname, True)
+                    smsg, button = GoogleDriveHelper().drive_list(sname, True)
                     if smsg:
-                        listener.onDownloadError("File/Folder is already available in Drive.")
+                        listener.onDownloadError('File/Folder already available in Drive.\n\n')
                         api.remove([download], force=True, files=True)
-                        tegr, html, tgdi = userlistype(user_id)
-                        if html:
-                            return sendFile(listener.bot, listener.message, button, f"Here are the search results:\n\n{smsg}")
-                        elif tegr:
-                            return sendMessage("Here are the search results:", listener.bot, listener.message, button)
-                        else: return sendMessage(smsg, listener.bot, listener.message, button)
-            size = download.total_length          
-            if any([ZIP_UNZIP_LIMIT, LEECH_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]) and user_id != OWNER_ID and not is_sudo(user_id) and not is_paid(user_id):
-                sleep(1)
-                limit = None
-                arch = any([listener.isZip, listener.isLeech, listener.extract])
-                if STORAGE_THRESHOLD:
-                    acpt = check_storage_threshold(size, arch, True)
-                    if not acpt:
-                        msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
-                        msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
-                        if config_dict['PAID_SERVICE'] is True:
-                            msg += f'\n#Buy Paid Service'
-                        listener.onDownloadError(msg)
-                        return api.remove([download], force=True, files=True)
-                elif ZIP_UNZIP_LIMIT and arch:
-                    mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'
-                    limit = ZIP_UNZIP_LIMIT
-                elif LEECH_LIMIT and arch:
-                    mssg = f'Leech limit is {LEECH_LIMIT}GB'
-                    limit = LEECH_LIMIT
-                elif TORRENT_DIRECT_LIMIT:
-                    mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}GB'
-                    limit = TORRENT_DIRECT_LIMIT
-                if config_dict['PAID_SERVICE'] is True:
-                    mssg += f'\n#Buy Paid Service'
-                if limit:
-                    LOGGER.info('Checking File/Folder Size...')
-                    if size > limit * 1024**3:
-                        listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                        return api.remove([download], force=True, files=True)
-            if DAILY_MIRROR_LIMIT and not listener.isLeech and user_id != OWNER_ID and not is_sudo(user_id) and not is_paid(user_id) and (size >= (DAILY_MIRROR_LIMIT - getdailytasks(user_id, check_mirror=True)) or DAILY_MIRROR_LIMIT <= getdailytasks(user_id, check_mirror=True)):
-                mssg = f"Daily Mirror Limit is {get_readable_file_size(DAILY_MIRROR_LIMIT)}\nYou have exhausted Today's Mirror Limit or Size of your Mirror is greater than free Limits.\n#TRY_AGAIN_TOMORROW #Daily_Mirror_Limit"
-                if config_dict['PAID_SERVICE'] is True:
-                    mssg += f'\n#Buy Paid Service'
-                listener.onDownloadError(mssg)
-                return api.remove([download], force=True, files=True)
-            elif not listener.isLeech: msize = getdailytasks(user_id, upmirror=size, check_mirror=True); LOGGER.info(f"User : {user_id} | Daily Mirror Size : {get_readable_file_size(msize)}")
-            if DAILY_LEECH_LIMIT and listener.isLeech and user_id != OWNER_ID and not is_sudo(user_id) and not is_paid(user_id) and (size >= (DAILY_LEECH_LIMIT - getdailytasks(user_id, check_leech=True)) or DAILY_LEECH_LIMIT <= getdailytasks(user_id, check_leech=True)):
-                mssg = f"Daily Leech Limit is {get_readable_file_size(DAILY_LEECH_LIMIT)}\nYou have exhausted Today's Leech Limit or Size of your Leech is greater than free Limits.\n#TRY_AGAIN_TOMORROW #Daily_Leech_Limit"
-                if config_dict['PAID_SERVICE'] is True:
-                    mssg += f'\n#Buy Paid Service'
-                listener.onDownloadError(mssg)
-                return api.remove([download], force=True, files=True)
-            elif listener.isLeech: lsize = getdailytasks(user_id, upleech=size, check_leech=True); LOGGER.info(f"User : {user_id} | Daily Leech Size : {get_readable_file_size(lsize)}")
-
+                        return sendMessage("Here are the search results:", listener.bot, listener.message, button)
     except Exception as e:
-        LOGGER.error(f"{e} onDownloadStart: {gid} stop duplicate and size check didn't pass")
+        LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 
 @new_thread
 def __onDownloadComplete(api, gid):
     try:
         download = api.get_download(gid)
-    except:
-        return
-    if download.followed_by_ids:
-        new_gid = download.followed_by_ids[0]
-        LOGGER.info(f'Gid changed from {gid} to {new_gid}')
-        if dl := getDownloadByGid(new_gid):
-            listener = dl.listener()
-            if config_dict['BASE_URL'] and listener.select:
-                api.client.force_pause(new_gid)
-                SBUTTONS = bt_selection_buttons(new_gid)
-                msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-                sendMessage(msg, listener.bot, listener.message, SBUTTONS)
-    elif download.is_torrent:
-        if dl := getDownloadByGid(gid):
-            if hasattr(dl, 'listener') and dl.seeding:
-                LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
-                dl.listener().onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
-                api.remove([download], force=True, files=True)
-    else:
-        LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
-        if dl := getDownloadByGid(gid):
-            dl.listener().onDownloadComplete()
-            api.remove([download], force=True, files=True)
+        file_path = download.path
+        if download.is_torrent:
+            files = download.files()
+            for file in files:
+                file_path = file.path
+                expected_md5 = download_dict[gid]['expected_md5']
+                file_md5 = get_md5(file_path)
+                if file_md5 != expected_md5:
+                    listener = dl.listener()
+                    listener.onDownloadError(f"MD5 check failed for {file.path}, expected {expected_md5}, got {file_md5}")
+                    return
 
+        if dl := getDownloadByGid(gid):
+            listener = dl.listener()
+            dl.download_status = AriaDownloadStatus.DOWNLOAD_COMPLETE
+            dl.end_t = time()
+            with download_dict_lock:
+                download_dict[gid]['status_message_id'] = None
+            if not listener.isLeech:
+                sname = download.name
+                if listener.isZip:
+                    sname = f"{sname}.zip"
+                elif listener.extract:
+                    try:
+                        sname = get_base_name(sname)
+                    except:
+                        sname = None
+                if sname is not None:
+                    smsg, button = GoogleDriveHelper().drive_list(sname, True)
+                    if smsg:
+                        listener.onDownloadError('File/Folder already available in Drive.\n\n')
+                        if ospath.isfile(file_path):
+                            remove(file_path)
+                        return sendMessage("Here are the search results:", listener.bot, listener.message, button)
+                if listener.isZip:
+                    sendMessage('Zip Starting...', listener.bot, listener.message)
+                    compress_file(file_path, sname)
+                    file_path = f"{sname}.zip"
+                if listener.isClean:
+                    clean_unwanted(file_path)
+                if listener.upload:
+                    sendMessage('Upload Starting...', listener.bot, listener.message)
+                    upload_file(file_path, sname, listener)
+                    if listener.isClean:
+                        clean_unwanted(file_path)
+                    if listener.upload:
+                        sendMessage('Upload Starting...', listener.bot, listener.message)
+                        upload_file(file_path, sname, listener)
+                    else:
+                        if ospath.isfile(file_path):
+                            remove(file_path)
+                else:
+                    sendStatusMessage(f"Download Complete: {download.name}", listener.bot, listener.message)
+            else:
+                if dl.seeding:
+                    LOGGER.info(f"Cancelling Seed: {download.name}")
+                    dl.seed_status = AriaDownloadStatus.SEED_CANCELLED
+                    api.remove([download], force=True)
+                    with download_dict_lock:
+                        download_dict[gid]['status_message_id'] = None
+                else:
+                    if ospath.isfile(file_path):
+                        remove(file_path)
+    except Exception as e:
+        LOGGER.error(f"{e} onDownloadComplete")
 
 @new_thread
 def __onBtDownloadComplete(api, gid):
@@ -239,16 +221,6 @@ def add_aria2c_download(link: str, path, listener, filename, auth, ratio, seed_t
         args['bt-stop-timeout'] = str(TORRENT_TIMEOUT)
     if is_magnet(link):
         download = aria2.add_magnet(link, args)
-    elif match(r'https?://.+\/\d+\:\/', link) and link[-1] == '/':
-        links, error = indexScrape({"page_token": "", "page_index": 0}, link, auth, folder_mode=True)
-        if error:
-            LOGGER.info(f"Download Error: {links}")
-            return sendMessage(links, listener.bot, listener.message)
-        dls = []
-        for link in links:
-            dls.append(aria2.add_uris([link], args))
-        LOGGER.info(dls)
-        download = dls[0]
     else:
         download = aria2.add_uris([link], args)
     if download.error_message:

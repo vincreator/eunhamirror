@@ -1,6 +1,7 @@
 from time import time
+
 from bot import aria2, LOGGER
-from bot.helper.ext_utils.bot_utils import MirrorStatus, EngineStatus, get_readable_time
+from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_time
 
 def get_download(gid):
     try:
@@ -19,7 +20,6 @@ class AriaDownloadStatus:
         self.start_time = 0
         self.seeding = seeding
         self.message = listener.message
-
 
     def __update(self):
         self.__download = self.__download.live
@@ -52,7 +52,6 @@ class AriaDownloadStatus:
 
     def name(self):
         return self.__download.name
-
 
     def size(self):
         return self.__download.total_length_string()
@@ -116,6 +115,3 @@ class AriaDownloadStatus:
             LOGGER.info(f"Cancelling Download: {self.name()}")
             self.__listener.onDownloadError('Download stopped by user!')
             aria2.remove([self.__download], force=True, files=True)
-
-    def eng(self):
-        return EngineStatus.STATUS_ARIA
