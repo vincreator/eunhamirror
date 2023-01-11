@@ -1,3 +1,4 @@
+import hashlib
 from time import sleep, time
 from os import remove, path as ospath
 
@@ -58,32 +59,44 @@ def __onDownloadStarted(api, gid):
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 
 @new_thread
+def compute_md5(file_path):
+    with open(file_path, 'rb') as f:
+        contents = f.read()
+        return hashlib.md5(contents).hexdigest()
+
 def __onDownloadComplete(api, gid):
     try:
         download = api.get_download(gid)
     except:
         return
-    if download.followed_by_ids:
-        new_gid = download.followed_by_ids[0]
-        LOGGER.info(f'Gid changed from {gid} to {new_gid}')
-        if dl := getDownloadByGid(new_gid):
-            listener = dl.listener()
-            if config_dict['BASE_URL'] and listener.select:
-                api.client.force_pause(new_gid)
-                SBUTTONS = bt_selection_buttons(new_gid)
-                msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-                sendMessage(msg, listener.bot, listener.message, SBUTTONS)
-    elif download.is_torrent:
-        if dl := getDownloadByGid(gid):
-            if hasattr(dl, 'listener') and dl.seeding:
-                LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
-                dl.listener().onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
-                api.remove([download], force=True, files=True)
+    expected_md5 = download.expected_md5
+    file_path = download.files[0]['path']
+    computed_md5 = compute_md5(file_path)
+    if computed_md5 != expected_md5:
+        dl.listener().onError("The computed md5 doesn't match the expected md5, download may be corrupted")
+        api.remove([download], force=True, files=True)
     else:
-        LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
-        if dl := getDownloadByGid(gid):
-            dl.listener().onDownloadComplete()
-            api.remove([download], force=True, files=True)
+        if download.followed_by_ids:
+            new_gid = download.followed_by_ids[0]
+            LOGGER.info(f'Gid changed from {gid} to {new_gid}')
+            if dl := getDownloadByGid(new_gid):
+                listener = dl.listener()
+                if config_dict['BASE_URL'] and listener.select:
+                    api.client.force_pause(new_gid)
+                    SBUTTONS = bt_selection_buttons(new_gid)
+                    msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
+                    sendMessage(msg, listener.bot, listener.message, SBUTTONS)
+        elif download.is_torrent:
+            if dl := getDownloadByGid(gid):
+                if hasattr(dl, 'listener') and dl.seeding:
+                    LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
+                    dl.listener().onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
+                    api.remove([download], force=True, files=True)
+        else:
+            LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
+            if dl := getDownloadByGid(gid):
+                dl.listener().onDownloadComplete()
+                api.remove([download], force=True, files=True)
 
 @new_thread
 def __onBtDownloadComplete(api, gid):
