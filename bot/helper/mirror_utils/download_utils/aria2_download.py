@@ -62,7 +62,6 @@ def __onDownloadStarted(api, gid):
 def __onDownloadComplete(api, gid):
     try:
         download = api.get_download(gid)
-        file_path = download.path
         if download.is_torrent:
             files = download.files()
             for file in files:
