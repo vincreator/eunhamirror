@@ -83,23 +83,8 @@ def __onDownloadComplete(api, gid):
     else:
         LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
         if dl := getDownloadByGid(gid):
-            thread = Thread(target=calculate_md5, args=(dl, ))
-            thread.start()
-
-def calculate_md5(dl:Download):
-    try:
-        with open(dl.download.file_path, 'rb') as file:
-            md5 = hashlib.md5()
-            while True:
-                data = file.read(8192)
-                if not data:
-                    break
-                md5.update(data)
-        dl.md5sum = md5.hexdigest()
-        dl.listener.onDownloadComplete(dl.md5sum)
-        api.remove([dl.download], force=True, files=True)
-    except Exception as e:
-        LOGGER.error(f"Failed to calculate md5 for file {dl.download.file_path} : {e}")
+            dl.listener().onDownloadComplete()
+            api.remove([download], force=True, files=True)
 
 @new_thread
 def __onBtDownloadComplete(api, gid):
