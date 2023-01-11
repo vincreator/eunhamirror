@@ -1,4 +1,3 @@
-import hashlib
 from time import sleep, time
 from os import remove, path as ospath
 
@@ -62,70 +61,29 @@ def __onDownloadStarted(api, gid):
 def __onDownloadComplete(api, gid):
     try:
         download = api.get_download(gid)
-        if download.is_torrent:
-            files = download.files()
-            for file in files:
-                file_path = file.path
-                expected_md5 = download_dict[gid]['expected_md5']
-                file_md5 = get_md5(file_path)
-                if file_md5 != expected_md5:
-                    listener = dl.listener()
-                    listener.onDownloadError(f"MD5 check failed for {file.path}, expected {expected_md5}, got {file_md5}")
-                    return
-
-        if dl := getDownloadByGid(gid):
+    except:
+        return
+    if download.followed_by_ids:
+        new_gid = download.followed_by_ids[0]
+        LOGGER.info(f'Gid changed from {gid} to {new_gid}')
+        if dl := getDownloadByGid(new_gid):
             listener = dl.listener()
-            dl.download_status = AriaDownloadStatus.DOWNLOAD_COMPLETE
-            dl.end_t = time()
-            with download_dict_lock:
-                download_dict[gid]['status_message_id'] = None
-            if not listener.isLeech:
-                sname = download.name
-                if listener.isZip:
-                    sname = f"{sname}.zip"
-                elif listener.extract:
-                    try:
-                        sname = get_base_name(sname)
-                    except:
-                        sname = None
-                if sname is not None:
-                    smsg, button = GoogleDriveHelper().drive_list(sname, True)
-                    if smsg:
-                        listener.onDownloadError('File/Folder already available in Drive.\n\n')
-                        if ospath.isfile(file_path):
-                            remove(file_path)
-                        return sendMessage("Here are the search results:", listener.bot, listener.message, button)
-                if listener.isZip:
-                    sendMessage('Zip Starting...', listener.bot, listener.message)
-                    compress_file(file_path, sname)
-                    file_path = f"{sname}.zip"
-                if listener.isClean:
-                    clean_unwanted(file_path)
-                if listener.upload:
-                    sendMessage('Upload Starting...', listener.bot, listener.message)
-                    upload_file(file_path, sname, listener)
-                    if listener.isClean:
-                        clean_unwanted(file_path)
-                    if listener.upload:
-                        sendMessage('Upload Starting...', listener.bot, listener.message)
-                        upload_file(file_path, sname, listener)
-                    else:
-                        if ospath.isfile(file_path):
-                            remove(file_path)
-                else:
-                    sendStatusMessage(f"Download Complete: {download.name}", listener.bot, listener.message)
-            else:
-                if dl.seeding:
-                    LOGGER.info(f"Cancelling Seed: {download.name}")
-                    dl.seed_status = AriaDownloadStatus.SEED_CANCELLED
-                    api.remove([download], force=True)
-                    with download_dict_lock:
-                        download_dict[gid]['status_message_id'] = None
-                else:
-                    if ospath.isfile(file_path):
-                        remove(file_path)
-    except Exception as e:
-        LOGGER.error(f"{e} onDownloadComplete")
+            if config_dict['BASE_URL'] and listener.select:
+                api.client.force_pause(new_gid)
+                SBUTTONS = bt_selection_buttons(new_gid)
+                msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
+                sendMessage(msg, listener.bot, listener.message, SBUTTONS)
+    elif download.is_torrent:
+        if dl := getDownloadByGid(gid):
+            if hasattr(dl, 'listener') and dl.seeding:
+                LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
+                dl.listener().onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
+                api.remove([download], force=True, files=True)
+    else:
+        LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
+        if dl := getDownloadByGid(gid):
+            dl.listener().onDownloadComplete()
+            api.remove([download], force=True, files=True)
 
 @new_thread
 def __onBtDownloadComplete(api, gid):
