@@ -141,7 +141,7 @@ def mediafire(url: str) -> str:
 
 def zippy_share(url: str) -> str:
     base_url = re_search('http.+.zippyshare.com', url).group()
-    response = rget(url)
+    response = rget(url, verify=False)
     pages = BeautifulSoup(response.text, "html.parser")
     js_script = pages.find("div", style="margin-left: 24px; margin-top: 20px; text-align: center; width: 303px; height: 105px;")
     if js_script is None:
