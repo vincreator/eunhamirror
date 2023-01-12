@@ -17,7 +17,7 @@ pillow
 psutil
 pybase64
 pymongo
-Pyrogram==2.0.93
+Pyrogram==2.0.63
 python-dotenv
 python-magic
 python-telegram-bot==13.15
