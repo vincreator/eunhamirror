@@ -24,8 +24,14 @@ from time import sleep
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
-fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
-             'naniplay.nanime.in', 'naniplay.nanime.biz', 'savefilm21info.xyz', 'naniplay.com', 'mm9842.com']
+fmed_list = ['fembed.net', 'fembed.com',
+             'femax20.com', 'fcdn.stream', 
+             'feurl.com', 'layarkacaxxi.icu',
+             'naniplay.nanime.in', 'naniplay.nanime.biz', 
+             'savefilm21info.xyz', 'naniplay.com', 
+             'sexhd.co', 'mm9842.com', 
+             'watchjavnow.xyz', 'nekolink.site', 
+             '2tazhfx9vrx4jnvaxt87sknw5eqbd6as.club']
 
 
 def direct_link_generator(link: str):
