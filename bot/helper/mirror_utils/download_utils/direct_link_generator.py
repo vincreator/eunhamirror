@@ -33,10 +33,11 @@ fmed_list = ['fembed.net', 'fembed.com',
              'watchjavnow.xyz', 'nekolink.site', 
              '2tazhfx9vrx4jnvaxt87sknw5eqbd6as.club'
             ]
-sbembed_list = ['sbembed.com', 'watchsb.com', 
-                'streamsb.net', 'sbplay.org',
-                'javside.com', 'sbchill.com'
-                ]
+
+sb_list = ['sbembed.com', 'watchsb.com', 
+            'streamsb.net', 'sbplay.org',
+            'javside.com', 'sbchill.com'
+            ]
 
 def direct_link_generator(link: str):
     """ direct links generator """
@@ -84,7 +85,7 @@ def direct_link_generator(link: str):
         return terabox(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
-    elif any(x in link for x in sbembed_list):
+    elif any(x in link for x in sb_list):
         return sbembed(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
