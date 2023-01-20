@@ -25,7 +25,7 @@ from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
-             'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
+             'naniplay.nanime.in', 'naniplay.nanime.biz', 'savefilm21info.xyz', 'naniplay.com', 'mm9842.com']
 
 
 def direct_link_generator(link: str):
@@ -70,7 +70,7 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif 'upload.ee' in link:
         return uploadee(link)
-    elif any(x in link for x in ['terabox', 'nephobox']):
+    elif any(x in link for x in ['terabox.com', 'nephobox.com']):
         return terabox(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
