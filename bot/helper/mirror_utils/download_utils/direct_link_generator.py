@@ -26,7 +26,7 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com',
              'femax20.com', 'fcdn.stream', 
-             'feurl.com', 'layarkacaxxi.icu',
+             'feurl.com', 'layarkacaxxi.icu', 
              'naniplay.nanime.in', 'naniplay.nanime.biz', 
              'savefilm21info.xyz', 'naniplay.com', 
              'sexhd.co', 'mm9842.com', 
@@ -34,7 +34,7 @@ fmed_list = ['fembed.net', 'fembed.com',
              '2tazhfx9vrx4jnvaxt87sknw5eqbd6as.club']
 
 sb_list = ['sbembed.com', 'watchsb.com', 
-        'streamsb.net', 'sbplay.org',
+        'streamsb.net', 'sbplay.org', 
         'javside.com', 'sbchill.com']
 
 st_list = ['streamtape.com', 'streamtape.xyz', 
