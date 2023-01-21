@@ -24,7 +24,9 @@ from time import sleep
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
-fmed_list = ['fembed.net', 'fembed.com',
+fmed_list = 
+            [
+            'fembed.net', 'fembed.com',
              'femax20.com', 'fcdn.stream', 
              'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 
@@ -34,10 +36,22 @@ fmed_list = ['fembed.net', 'fembed.com',
              '2tazhfx9vrx4jnvaxt87sknw5eqbd6as.club'
             ]
 
-sb_list = ['sbembed.com', 'watchsb.com', 
-            'streamsb.net', 'sbplay.org',
-            'javside.com', 'sbchill.com'
-            ]
+sb_list = 
+        [
+        'sbembed.com', 'watchsb.com', 
+        'streamsb.net', 'sbplay.org',
+        'javside.com', 'sbchill.com'
+        ]
+
+st_list = 
+        [
+        'streamtape.com', 'streamtape.xyz', 
+        'streamtape.', 'strtape.cloud', 
+        'streamta.pe', 'strcloud.link', 
+        'strtpe.link', 'scloud.online', 
+        'stape.fun', 'streamtapeadblock.art', 
+        'streamadblockplus.com', 'shavetape.cash'
+        ]
 
 def direct_link_generator(link: str):
     """ direct links generator """
@@ -67,8 +81,6 @@ def direct_link_generator(link: str):
         return pixeldrain(link)
     elif 'antfiles.com' in link:
         return antfiles(link)
-    elif 'streamtape.com' in link:
-        return streamtape(link)
     elif 'bayfiles.com' in link:
         return anonfiles(link)
     elif 'racaty.net' in link:
@@ -81,6 +93,8 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif 'upload.ee' in link:
         return uploadee(link)
+    elif any(x in link for x in st_list):
+        return streamtape(link)
     elif any(x in link for x in ['terabox.com', 'nephobox.com']):
         return terabox(link)
     elif any(x in link for x in fmed_list):
