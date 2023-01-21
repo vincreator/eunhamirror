@@ -301,7 +301,7 @@ def antfiles(url: str) -> str:
     """
     return Bypass().bypass_antfiles(url)
 
-def streamtape(link: str) -> str:
+def streamtape(url: str) -> str:
     """ Streamtape direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
