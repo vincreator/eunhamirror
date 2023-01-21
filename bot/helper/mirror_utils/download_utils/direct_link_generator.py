@@ -305,7 +305,7 @@ def streamtape(url: str) -> str:
     """ Streamtape direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    dl_url= Bypass().bypass_streamtape(link)
+    dl_url= Bypass().bypass_streamtape(url)
     count = len(dl_url)
     lst_link = [dl_url[i] for i in dl_url]
     return lst_link[count-1]
