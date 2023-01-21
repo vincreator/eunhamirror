@@ -24,18 +24,25 @@ from time import sleep
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
-fmed_list = ['fembed.net', 'fembed.com',
-             'femax20.com', 'fcdn.stream', 
-             'feurl.com', 'layarkacaxxi.icu', 
-             'naniplay.nanime.in', 'naniplay.nanime.biz', 
-             'savefilm21info.xyz', 'naniplay.com', 
-             'sexhd.co', 'mm9842.com', 
-             'watchjavnow.xyz', 'nekolink.site', 
-             '2tazhfx9vrx4jnvaxt87sknw5eqbd6as.club']
+fm_list = ['fembed.net', 'fembed.com', 
+            'femax20.com', 'fcdn.stream', 
+            'feurl.com', 'layarkacaxxi.icu', 
+            'naniplay.nanime.in', 'naniplay.nanime.biz', 
+            'savefilm21info.xyz', 'naniplay.com', 
+            'sexhd.co', 'mm9842.com', 
+            'watchjavnow.xyz', 'nekolink.site', 
+            '2tazhfx9vrx4jnvaxt87sknw5eqbd6as.club', 
+            'mrdhan.com', 'dutrag.com', 
+            'cumpletlyaws.my.id']
 
 sb_list = ['sbembed.com', 'watchsb.com', 
         'streamsb.net', 'sbplay.org', 
-        'javside.com', 'sbchill.com']
+        'javside.com', 'sbchill.com', 
+        'sbembed1.com', 'sbvideo.net', 
+        'cloudemb.com', 'playersb.com', 
+        'tubesb.com', 'sbplay1.com', 
+        'sbplay2.com', 'sbplay2.xyz', 
+        'embedsb.com']
 
 st_list = ['streamtape.com', 'streamtape.xyz', 
         'streamtape.', 'strtape.cloud', 
@@ -88,7 +95,7 @@ def direct_link_generator(link: str):
         return streamtape(link)
     elif any(x in link for x in ['terabox.com', 'nephobox.com']):
         return terabox(link)
-    elif any(x in link for x in fmed_list):
+    elif any(x in link for x in fm_list):
         return fembed(link)
     elif any(x in link for x in sb_list):
         return sbembed(link)
