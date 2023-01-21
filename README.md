@@ -1,4 +1,4 @@
-[![Betterme](https://telegra.ph/file/044017033ca7028c9fc85.jpg)](https://youtu.be/s2TktuIA9-s)
+[![Betterme](https://telegra.ph/file/b490985ebdef513f8b206.png)](https://youtu.be/s2TktuIA9-s)
 
 # Eunha Mirror
 ![GitHub Repo stars](https://img.shields.io/github/stars/vincreator/eunhamirror?color=blue&style=flat)
