@@ -304,8 +304,8 @@ def antfiles(url: str) -> str:
 def streamtape(url: str) -> str:
     try:
         return Bypass().bypass_streamtape(url)
-    except:
-        DirectDownloadLinkException("No Streamtape links found")
+    except Exception as e:
+        raise e
 
 def racaty(url: str) -> str:
     """ Racaty direct link generator
