@@ -11,7 +11,7 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-git+https://github.com/TheBreakdowns/lk21
+git+https://github.com/vincreator/lk21
 lxml
 pillow
 psutil
