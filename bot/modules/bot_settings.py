@@ -355,8 +355,7 @@ def load_config():
                         'VIEW_LINK': VIEW_LINK,
                         'WEB_PINCODE': WEB_PINCODE,
                         'YT_DLP_QUALITY': YT_DLP_QUALITY,
-                        'IMDB_ENABLED': IMDB_ENABLED,
-                        'IMDB_TEMPLATE': IMDB_TEMPLATE})
+                        'IMDB_ENABLED': IMDB_ENABLED})
 
     if DATABASE_URL:
         DbManger().update_config(config_dict)
