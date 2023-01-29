@@ -170,9 +170,9 @@ else:
     log_info("Creating client from RSS_USER_SESSION_STRING")
     rss_session = Client(name='rss_session', api_id=TELEGRAM_API, api_hash=TELEGRAM_HASH, session_string=RSS_USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
 
-DEF_IMDB_TEMP  = environ.get('IMDB_TEMPLATE', '')
-if len(DEF_IMDB_TEMP) == 0:
-    DEF_IMDB_TEMP = '''<b>Title: </b> {title} [{year}]
+IMDB_TEMPLATE  = environ.get('IMDB_TEMPLATE', '')
+if len(IMDB_TEMPLATE) == 0:
+    IMDB_TEMPLATE = '''<b>Title: </b> {title} [{year}]
 <b>Also Known As:</b> {aka}
 <b>Rating ⭐️:</b> <i>{rating}</i>
 <b>Release Info: </b> <a href="{url_releaseinfo}">{release_date}</a>
@@ -383,7 +383,8 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'VIEW_LINK': VIEW_LINK,
                'WEB_PINCODE': WEB_PINCODE,
                'YT_DLP_QUALITY': YT_DLP_QUALITY,
-               'IMDB_ENABLED': IMDB_ENABLED}
+               'IMDB_ENABLED': IMDB_ENABLED,
+               'IMDB_TEMPLATE': IMDB_TEMPLATE}
 
 if GDRIVE_ID:
     DRIVES_NAMES.append("Main")
