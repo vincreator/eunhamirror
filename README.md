@@ -301,11 +301,11 @@ sudo dockerd
 ```
 - Build Docker image:
 ```
-sudo docker build . -t mltb
+sudo docker build . -t EunhaMirror
 ```
 - Run the image:
 ```
-sudo docker run -p 80:80 mltb
+sudo docker run -p 80:80 EunhaMirror
 ```
 - To stop the running image:
 ```

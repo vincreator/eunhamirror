@@ -9,8 +9,6 @@ than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtend
 for original authorship. """
 
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
-from os import path
-from http.cookiejar import MozillaCookieJar
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from math import pow as math_pow, floor as math_floor
 from urllib.parse import urlparse, unquote
@@ -53,6 +51,7 @@ st_list = ['streamtape.com', 'streamtape.xyz',
         'stape.fun', 'streamtapeadblock.art', 
         'streamadblockplus.com', 'shavetape.cash']
 
+tb_list = ['terabox.com', 'mirrobox.com', '4funbox.com', 'nephobox.com']
 
 def direct_link_generator(link: str):
     """ direct links generator """
@@ -94,8 +93,6 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif 'upload.ee' in link:
         return uploadee(link)
-    elif any(x in link for x in st_list):
-        return streamtape(link)
     elif is_Sharerlink(link):
         if 'gdtot' in link:
             return gdtot(link)
@@ -105,12 +102,14 @@ def direct_link_generator(link: str):
             return sharer_scraper(link)
         else:
             raise DirectDownloadLinkException('ERROR: Currently this sharer link does not support')
-    elif any(x in link for x in ['terabox.com', 'mirrobox.com', '4funbox.com', 'nephobox.com']):
-        return terabox(link)
     elif any(x in link for x in fm_list):
         return fembed(link)
     elif any(x in link for x in sb_list):
         return sbembed(link)
+    elif any(x in link for x in st_list):
+        return streamtape(link)
+    elif any(x in link for x in tb_list):
+        return terabox(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
@@ -456,15 +455,14 @@ def uploadee(url: str) -> str:
         raise DirectDownloadLinkException(f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
 
 def terabox(url) -> str:
-    if not path.isfile('terabox.txt'):
-        raise DirectDownloadLinkException("ERROR: terabox.txt not found")
+    TERABOX_COOKIES = config_dict['TERABOX_COOKIES']
+    if not TERABOX_COOKIES:
+        LOGGER.error('TERABOX_COOKIES not provided!')
     try:
         session = rsession()
+        session.cookies.update({"ndus": config_dict['TERABOX_COOKIES']})
         res = session.request('GET', url)
         key = res.url.split('?surl=')[-1]
-        jar = MozillaCookieJar('terabox.txt')
-        jar.load()
-        session.cookies.update(jar)
         res = session.request('GET', f'https://www.terabox.com/share/list?app_id=250528&shorturl={key}&root=1')
         result = res.json()['list']
     except Exception as e:

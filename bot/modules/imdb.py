@@ -11,7 +11,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.ext_utils.bot_utils import get_readable_time
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot import app, LOGGER, dispatcher, IMDB_ENABLED, DEF_IMDB_TEMP, user_data, LIST_ITEMS
+from bot import app, LOGGER, dispatcher, IMDB_ENABLED, IMDB_TEMPLATE, user_data, LIST_ITEMS
 
 imdb = IMDb() 
 
@@ -182,7 +182,7 @@ def imdb_callback(update, context):
         if int(data[1]) in user_data and user_data[int(data[1])].get('imdb_temp'):
             template = user_data[int(data[1])].get('imdb_temp')
         if not template:
-            template = DEF_IMDB_TEMP
+            template = IMDB_TEMPLATE
         if imdb and template != "":
             cap = template.format(
             title = imdb['title'],

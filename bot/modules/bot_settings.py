@@ -109,6 +109,10 @@ def load_config():
     if len(UPTOBOX_TOKEN) == 0:
         UPTOBOX_TOKEN = ''
 
+    TERABOX_COOKIES = environ.get('TERABOX_COOKIES', '')
+    if len(TERABOX_COOKIES) == 0:
+        TERABOX_COOKIES = ''
+    
     INDEX_URL = environ.get('INDEX_URL', '').rstrip("/")
     if len(INDEX_URL) == 0:
         INDEX_URL = ''
@@ -130,6 +134,9 @@ def load_config():
         SEARCH_PLUGINS = ''
 
     MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
+
+    IMDB_ENABLED = environ.get('IMDB_ENABLED', '')
+    IMDB_ENABLED = IMDB_ENABLED.lower() == 'true'
 
     LEECH_SPLIT_SIZE = environ.get('LEECH_SPLIT_SIZE', '')
     if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE:
@@ -240,9 +247,9 @@ def load_config():
     EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
     EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
     
-    DEF_IMDB_TEMP  = environ.get('IMDB_TEMPLATE', '')
-    if len(DEF_IMDB_TEMP) == 0:
-        DEF_IMDB_TEMP = '''<b>Title: </b> {title} [{year}]
+    IMDB_TEMPLATE  = environ.get('IMDB_TEMPLATE', '')
+    if len(IMDB_TEMPLATE) == 0:
+        IMDB_TEMPLATE = '''<b>Title: </b> {title} [{year}]
     <b>Also Known As:</b> {aka}
     <b>Rating ⭐️:</b> <i>{rating}</i>
     <b>Release Info: </b> <a href="{url_releaseinfo}">{release_date}</a>
@@ -342,11 +349,14 @@ def load_config():
                         'UPSTREAM_REPO': UPSTREAM_REPO,
                         'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
                         'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
+                        'TERABOX_COOKIES': TERABOX_COOKIES,
                         'USER_SESSION_STRING': USER_SESSION_STRING,
                         'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                         'VIEW_LINK': VIEW_LINK,
                         'WEB_PINCODE': WEB_PINCODE,
-                        'YT_DLP_QUALITY': YT_DLP_QUALITY})
+                        'YT_DLP_QUALITY': YT_DLP_QUALITY,
+                        'IMDB_ENABLED': IMDB_ENABLED,
+                        'IMDB_TEMPLATE': IMDB_TEMPLATE})
 
     if DATABASE_URL:
         DbManger().update_config(config_dict)

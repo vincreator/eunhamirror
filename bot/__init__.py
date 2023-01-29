@@ -199,6 +199,10 @@ UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
 if len(UPTOBOX_TOKEN) == 0:
     UPTOBOX_TOKEN = ''
 
+TERABOX_COOKIES = environ.get('TERABOX_COOKIES', '')
+if len(TERABOX_COOKIES) == 0:
+    TERABOX_COOKIES = ''
+
 INDEX_URL = environ.get('INDEX_URL', '').rstrip("/")
 if len(INDEX_URL) == 0:
     INDEX_URL = ''
@@ -370,6 +374,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'TELEGRAM_API': TELEGRAM_API,
                'TELEGRAM_HASH': TELEGRAM_HASH,
                'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
+               'TERABOX_COOKIES': TERABOX_COOKIES,
                'UPSTREAM_REPO': UPSTREAM_REPO,
                'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
                'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
@@ -377,7 +382,9 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                'VIEW_LINK': VIEW_LINK,
                'WEB_PINCODE': WEB_PINCODE,
-               'YT_DLP_QUALITY': YT_DLP_QUALITY}
+               'YT_DLP_QUALITY': YT_DLP_QUALITY,
+               'IMDB_ENABLED': IMDB_ENABLED,
+               'IMDB_TEMPLATE': IMDB_TEMPLATE}
 
 if GDRIVE_ID:
     DRIVES_NAMES.append("Main")
