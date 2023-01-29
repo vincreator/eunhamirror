@@ -13,7 +13,6 @@ from re import findall as re_findall, sub as re_sub, match as re_match, search a
 from math import pow as math_pow, floor as math_floor
 from urllib.parse import urlparse, unquote
 from json import loads as jsonloads
-from pypasser import reCaptchaV3
 from lk21 import Bypass
 from lxml import etree
 from cfscrape import create_scraper
@@ -399,27 +398,6 @@ def fichier(link: str) -> str:
     else:
         raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
 
-def ouo(url: str) -> str:
-    client = rsession()
-    tempurl = url.replace("ouo.press", "ouo.io")
-    p = urlparse(tempurl)
-    id = tempurl.split('/')[-1]
-    res = client.get(tempurl)
-    next_url = f"{p.scheme}://{p.hostname}/go/{id}"
-    for _ in range(2):
-        if res.headers.get('Location'):
-            break
-        bs4 = BeautifulSoup(res.content, 'html.parser')
-        inputs = bs4.form.findAll("input", {"name": re_compile(r"token$")})
-        data = {input.get('name'): input.get('value') for input in inputs}
-        ans = reCaptchaV3('ANCHOR URL')
-        data['x-token'] = ans
-        h = {'content-type': 'application/x-www-form-urlencoded'}
-        res = client.post(next_url, data=data, headers=h,
-                          allow_redirects=False)
-        next_url = f"{p.scheme}://{p.hostname}/xreallcygo/{id}"
-    return res.headers.get('Location')
-    
 def solidfiles(url: str) -> str:
     """ Solidfiles direct link generator
     Based on https://github.com/Xonshiz/SolidFiles-Downloader
