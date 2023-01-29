@@ -18,6 +18,7 @@ psutil
 pybase64
 pymongo
 pyrogram==2.0.66
+PyPasser
 python-dotenv
 python-magic
 python-telegram-bot==13.15
