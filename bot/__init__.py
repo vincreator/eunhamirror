@@ -383,7 +383,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'VIEW_LINK': VIEW_LINK,
                'WEB_PINCODE': WEB_PINCODE,
                'YT_DLP_QUALITY': YT_DLP_QUALITY,
-               'IMDB_ENABLED': IMDB_ENABLED,}
+               'IMDB_ENABLED': IMDB_ENABLED}
 
 if GDRIVE_ID:
     DRIVES_NAMES.append("Main")
