@@ -1,16 +1,24 @@
-from logging import getLogger, ERROR
-from os import remove as osremove, walk, path as ospath, rename as osrename
-from time import time, sleep
-from pyrogram.types import InputMediaVideo, InputMediaDocument
-from pyrogram.errors import FloodWait, RPCError
-from PIL import Image
+from copy import copy
+from logging import ERROR, getLogger
+from os import path as ospath
+from os import remove, rename, walk
+from re import search, sub
 from threading import RLock
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
-from re import search as re_search
+from time import sleep, time
 
-from bot import config_dict, user_data, GLOBAL_EXTENSION_FILTER, app
-from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_media_streams, clean_unwanted
+from PIL import Image
+from pyrogram.errors import FloodWait, RPCError
+from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
+                            InputMediaDocument, InputMediaVideo)
+from telegram import InputMediaDocument as ptbInputMediaDocument
+from telegram import InputMediaVideo as ptbInputMediaVideo
+from tenacity import (RetryError, retry, retry_if_exception_type,
+                      stop_after_attempt, wait_exponential)
+
+from bot import GLOBAL_EXTENSION_FILTER, app, config_dict, user_data, IS_USER_SESSION
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
+from bot.helper.ext_utils.fs_utils import (clean_unwanted, get_media_info,
+                                           get_media_streams, take_ss)
 
 LOGGER = getLogger(__name__)
 getLogger("pyrogram").setLevel(ERROR)
@@ -35,8 +43,10 @@ class TgUploader:
         self.__resource_lock = RLock()
         self.__is_corrupted = False
         self.__size = size
+        self.__button = None
         self.__media_dict = {'videos': {}, 'documents': {}}
         self.__last_msg_in_group = False
+        self.__sent_DMmsg = None
         self.__msg_to_reply()
         self.__user_settings()
 
@@ -59,7 +69,7 @@ class TgUploader:
                         return
                     if self.__last_msg_in_group:
                         group_lists = [x for v in self.__media_dict.values() for x in v.keys()]
-                        if (match := re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path)) and match.group(0) not in group_lists:
+                        if (match := search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path)) and match.group(0) not in group_lists:
                             for key, value in list(self.__media_dict.items()):
                                 for subkey, msgs in list(value.items()):
                                     if len(msgs) > 1:
@@ -71,7 +81,7 @@ class TgUploader:
                     if self.__is_cancelled:
                         return
                     if not self.__listener.seed or self.__listener.newDir or dirpath.endswith("splited_files_mltb"):
-                            osremove(up_path)
+                        remove(up_path)
                     if not self.__is_corrupted and (not self.__listener.isPrivate or config_dict['DUMP_CHAT']):
                         self.__msgs_dict[self.__sent_msg.link] = file_
                     sleep(1)
@@ -85,6 +95,13 @@ class TgUploader:
             for subkey, msgs in list(value.items()):
                 if len(msgs) > 1:
                     self.__send_media_group(subkey, key, msgs)
+                elif self.__sent_DMmsg:
+                    sleep(1)
+                    __ptb = self.__sent_DMmsg.reply_copy(
+                    from_chat_id=self.__sent_msg.chat.id,
+                    quote=True,
+                    message_id=self.__sent_msg.id)
+                    self.__sent_DMmsg.message_id = __ptb['message_id']
         if self.__is_cancelled:
             return
         if self.__listener.seed and not self.__listener.newDir:
@@ -100,10 +117,12 @@ class TgUploader:
         self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     def __prepare_file(self, up_path, file_, dirpath):
-        if LEECH_FILENAME_PREFIX := config_dict['LEECH_FILENAME_PREFIX']:
-            cap_mono = f"{LEECH_FILENAME_PREFIX} <code>{file_}</code>"
-            new_path = ospath.join(dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
-            osrename(up_path, new_path)
+        if self.__lprefix:
+            cap_mono = f"{self.__lprefix} <code>{file_}</code>"
+            self.__lprefix = sub('<.*?>', '', self.__lprefix)
+            file_ = f"{self.__lprefix} {file_}"
+            new_path = ospath.join(dirpath, file_)
+            rename(up_path, new_path)
             up_path = new_path
         else:
             cap_mono = f"<code>{file_}</code>"
@@ -125,24 +144,25 @@ class TgUploader:
                     thumb = take_ss(up_path, None)
                     if self.__is_cancelled:
                         if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
-                            osremove(thumb)
+                            remove(thumb)
                         return
                 self.__sent_msg = self.__sent_msg.reply_document(document=up_path,
                                                                  quote=True,
                                                                  thumb=thumb,
                                                                  caption=cap_mono,
                                                                  disable_notification=True,
+                                                                 reply_markup=self.__button,
                                                                  progress=self.__upload_progress)
             elif is_video:
                 key = 'videos'
                 duration = get_media_info(up_path)[0]
-                if thumb is None:
+                if not thumb:
                     thumb = take_ss(up_path, duration)
                     if self.__is_cancelled:
-                        if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
-                            osremove(thumb)
+                        if not self.__thumb and thumb and ospath.lexists(thumb):
+                            remove(thumb)
                         return
-                if thumb is not None:
+                if thumb:
                     with Image.open(thumb) as img:
                         width, height = img.size
                 else:
@@ -150,7 +170,7 @@ class TgUploader:
                     height = 320
                 if not up_path.upper().endswith(("MKV", "MP4")):
                     new_path = f"{up_path.rsplit('.', 1)[0]}.mp4"
-                    osrename(up_path, new_path)
+                    rename(up_path, new_path)
                     up_path = new_path
                 self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
                                                               quote=True,
@@ -161,6 +181,7 @@ class TgUploader:
                                                               thumb=thumb,
                                                               supports_streaming=True,
                                                               disable_notification=True,
+                                                              reply_markup=self.__button,
                                                               progress=self.__upload_progress)
             elif is_audio:
                 key = 'audios'
@@ -173,6 +194,7 @@ class TgUploader:
                                                               title=title,
                                                               thumb=thumb,
                                                               disable_notification=True,
+                                                              reply_markup=self.__button,
                                                               progress=self.__upload_progress)
             else:
                 key = 'photos'
@@ -180,10 +202,11 @@ class TgUploader:
                                                               quote=True,
                                                               caption=cap_mono,
                                                               disable_notification=True,
+                                                              reply_markup=self.__button,
                                                               progress=self.__upload_progress)
             if not self.__is_cancelled and self.__media_group and (self.__sent_msg.video or self.__sent_msg.document):
                 key = 'documents' if self.__sent_msg.document else 'videos'
-                if match := re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path):
+                if match := search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path):
                     pname = match.group(0)
                     if pname in self.__media_dict[key].keys():
                         self.__media_dict[key][pname].append(self.__sent_msg)
@@ -194,6 +217,14 @@ class TgUploader:
                         self.__send_media_group(pname, key, msgs)
                     else:
                         self.__last_msg_in_group = True
+
+            if not self.__last_msg_in_group and self.__sent_DMmsg:
+                sleep(1)
+                __ptb = self.__sent_DMmsg.reply_copy(
+                from_chat_id=self.__sent_msg.chat.id,
+                quote=True,
+                message_id=self.__sent_msg.id)
+                self.__sent_DMmsg.message_id = __ptb['message_id']
         except FloodWait as f:
             LOGGER.warning(str(f))
             sleep(f.value)
@@ -205,8 +236,8 @@ class TgUploader:
                 return self.__upload_file(up_path, cap_mono, True)
             raise err
         finally:
-            if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
-                osremove(thumb)
+            if not self.__thumb and thumb and ospath.lexists(thumb):
+                remove(thumb)
 
     def __upload_progress(self, current, total):
         if self.__is_cancelled:
@@ -222,32 +253,46 @@ class TgUploader:
         user_dict = user_data.get(user_id, {})
         self.__as_doc = user_dict.get('as_doc') or 'as_doc' not in user_dict and config_dict['AS_DOCUMENT']
         self.__media_group = user_dict.get('media_group') or 'media_group' not in user_dict and config_dict['MEDIA_GROUP']
+        self.__lprefix = user_dict.get('lprefix') or 'lprefix' not in user_dict and config_dict['LEECH_FILENAME_PREFIX']
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
     def __msg_to_reply(self):
-        if DUMP_CHAT := config_dict['DUMP_CHAT']:
-            if self.__listener.isPrivate:
-                msg = self.__listener.message.text
+        if DUMP_CHAT:= config_dict['DUMP_CHAT']:
+            if self.__listener.logMessage:
+                self.__sent_msg = app.copy_message(DUMP_CHAT, self.__listener.logMessage.chat.id, self.__listener.logMessage.message_id)
             else:
-                msg = self.__listener.message.link
-            self.__sent_msg = app.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
+                msg = self.__listener.message.text if self.__listener.isPrivate else f'<b><a href="{self.__listener.message.link}">Source</a></b>'
+                msg = f'{msg}\n\n<b>#cc</b>: {self.__listener.tag} (<code>{self.__listener.message.from_user.id}</code>)'
+                self.__sent_msg = app.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
+            if self.__listener.dmMessage:
+                self.__sent_DMmsg = copy(self.__listener.dmMessage)
+        elif self.__listener.dmMessage:
+            self.__sent_msg = app.get_messages(self.__listener.message.from_user.id, self.__listener.dmMessage.message_id)
         else:
             self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
+        if (not IS_USER_SESSION and self.__listener.message.chat.type != 'private' and config_dict['DUMP_CHAT']) or not self.__listener.dmMessage:
+            self.__button = InlineKeyboardMarkup([[InlineKeyboardButton(text='Save Message', callback_data="save")]])
+
 
     def __get_input_media(self, subkey, key):
         rlist = []
+        ptblist = []
         for msg in self.__media_dict[key][subkey]:
             if key == 'videos':
                 input_media = InputMediaVideo(media=msg.video.file_id, caption=msg.caption)
+                ptbinput_media = ptbInputMediaVideo(media=msg.video.file_id, caption=msg.caption)
             else:
                 input_media = InputMediaDocument(media=msg.document.file_id, caption=msg.caption)
+                ptbinput_media = ptbInputMediaDocument(media=msg.document.file_id, caption=msg.caption)
             rlist.append(input_media)
-        return rlist
+            ptblist.append(ptbinput_media)
+        return rlist, ptblist
 
     def __send_media_group(self, subkey, key, msgs):
+        pyromedia, ptbmdedia = self.__get_input_media(subkey, key)
         msgs_list = msgs[0].reply_to_message.reply_media_group(
-                            media=self.__get_input_media(subkey, key),
+                            media=pyromedia,
                             quote=True,
                             disable_notification=True)
         for msg in msgs:
@@ -259,6 +304,13 @@ class TgUploader:
             for m in msgs_list:
                 self.__msgs_dict[m.link] = m.caption
         self.__sent_msg = msgs_list[-1]
+        if self.__sent_DMmsg:
+            msgs_list = self.__sent_DMmsg.reply_media_group(
+                ptbmdedia,
+                quote=True,
+                disable_notification=True
+            )
+            self.__sent_DMmsg = msgs_list[-1]
 
     @property
     def speed(self):

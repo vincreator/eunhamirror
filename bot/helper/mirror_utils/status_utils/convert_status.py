@@ -1,8 +1,7 @@
-from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size
 
 
-class SplitStatus:
+class ConvertStatus:
     def __init__(self, name, size, gid, listener):
         self.__name = name
         self.__gid = gid
@@ -10,7 +9,7 @@ class SplitStatus:
         self.__listener = listener
         self.message = self.__listener.message
         self.source = self.__source()
-        self.engine = "ffmpeg/split"
+        self.engine = "ffmpeg"
 
     def gid(self):
         return self.__gid
@@ -31,19 +30,13 @@ class SplitStatus:
         return '0s'
 
     def status(self):
-        return MirrorStatus.STATUS_SPLITTING
+        return MirrorStatus.STATUS_CONVERTING
 
     def processed_bytes(self):
         return 0
 
     def download(self):
         return self
-
-    def cancel_download(self):
-        LOGGER.info(f'Cancelling Split: {self.__name}')
-        if self.__listener.suproc:
-            self.__listener.suproc.kill()
-        self.__listener.onUploadError('splitting stopped by user!')
 
     def __source(self):
         reply_to = self.message.reply_to_message

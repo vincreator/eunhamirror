@@ -1,8 +1,12 @@
-from os import path as ospath, makedirs
+from os import makedirs
+from os import path as ospath
+
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from bot import DATABASE_URL, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options, qbit_options
+from bot import (DATABASE_URL, LOGGER, aria2_options, bot_id, botname,
+                 config_dict, qbit_options, rss_dict, user_data)
+
 
 class DbManger:
     def __init__(self):
@@ -31,8 +35,8 @@ class DbManger:
         if self.__db.settings.qbittorrent.find_one({'_id': bot_id}) is None:
             self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': qbit_options}, upsert=True)
         # User Data
-        if self.__db.users.find_one():
-            rows = self.__db.users.find({})
+        if self.__db.users[bot_id].find_one():
+            rows = self.__db.users[bot_id].find({})
             # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb, yt_ql, media_group, equal_splits, split_size}
             for row in rows:
                 uid = row['_id']
@@ -92,18 +96,18 @@ class DbManger:
         data = user_data[user_id]
         if data.get('thumb'):
             del data['thumb']
-        self.__db.users.update_one({'_id': user_id}, {'$set': data}, upsert=True)
+        self.__db.users[bot_id].update_one({'_id': user_id}, {'$set': data}, upsert=True)
         self.__conn.close()
 
     def update_thumb(self, user_id, path=None):
         if self.__err:
             return
-        if path is not None:
+        if path:
             with open(path, 'rb+') as image:
                 image_bin = image.read()
         else:
             image_bin = ''
-        self.__db.users.update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
+        self.__db.users[bot_id].update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
         self.__conn.close()
 
     def rss_update(self, title):
@@ -149,13 +153,39 @@ class DbManger:
         self.__conn.close()
         return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}
 
-
     def trunc_table(self, name):
         if self.__err:
             return
         self.__db[name][bot_id].drop()
         self.__conn.close()
 
+    def add_download_url(self, url: str, tag: str):
+        if self.__err:
+            return
+        download = {'_id': url, 'tag': tag, 'botname': botname}
+        self.__db.download_links.update_one({'_id': url}, {'$set': download}, upsert=True)
+        self.__conn.close()
+
+    def check_download(self, url:str):
+        if self.__err:
+            return
+        exist = self.__db.download_links.find_one({'_id': url})
+        self.__conn.close()
+        return exist
+
+    def clear_download_links(self, bot_name=None):
+        if self.__err:
+            return
+        if not bot_name:
+            bot_name = botname
+        self.__db.download_links.delete_many({'botname': bot_name})
+        self.__conn.close()
+
+    def remove_download(self, url: str):
+        if self.__err:
+            return
+        self.__db.download_links.delete_one({'_id': url})
+        self.__conn.close()
+
 if DATABASE_URL:
     DbManger().db_load()
-

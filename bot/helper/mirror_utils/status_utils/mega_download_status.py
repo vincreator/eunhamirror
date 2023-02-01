@@ -1,11 +1,19 @@
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time
+from mega import MegaApi
 
+from bot.helper.ext_utils.bot_utils import (MirrorStatus,
+                                            get_readable_file_size,
+                                            get_readable_time)
+
+engine_ = f"MegaSDK v{MegaApi('test').getVersion()}"
 
 class MegaDownloadStatus:
 
     def __init__(self, obj, listener):
+        self.__listener = listener
         self.__obj = obj
-        self.message = listener.message
+        self.message = self.__listener.message
+        self.source = self.__source()
+        self.engine = engine_
 
     def name(self) -> str:
         return self.__obj.name
@@ -45,6 +53,9 @@ class MegaDownloadStatus:
     def speed_raw(self):
         return self.__obj.speed
 
+    def listener(self):
+        return self.__listener
+
     def speed(self) -> str:
         return f'{get_readable_file_size(self.speed_raw())}/s'
 
@@ -53,3 +64,12 @@ class MegaDownloadStatus:
 
     def download(self):
         return self.__obj
+
+    def __source(self):
+        reply_to = self.message.reply_to_message
+        return reply_to.from_user.username or reply_to.from_user.id if reply_to and \
+            not reply_to.from_user.is_bot else self.message.from_user.username \
+                or self.message.from_user.id
+
+    def mode(self):
+        return self.__listener.mode

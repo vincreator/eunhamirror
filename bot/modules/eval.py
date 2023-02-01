@@ -1,13 +1,14 @@
-from os import path as ospath, getcwd, chdir
-from traceback import format_exc
-from textwrap import indent
-from io import StringIO, BytesIO
-from telegram.ext import CommandHandler
 from contextlib import redirect_stdout
+from io import BytesIO, StringIO
+from os import chdir, getcwd, path
+from textwrap import indent
+from traceback import format_exc
 
-from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.bot_commands import BotCommands
+from telegram.ext import CommandHandler
+
 from bot import LOGGER, dispatcher
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
 
 namespaces = {}
 
@@ -64,7 +65,7 @@ def do(func, bot, update):
 
     chdir(getcwd())
     with open(
-            ospath.join(getcwd(),
+            path.join(getcwd(),
                          'bot/modules/temp.txt'),
             'w') as temp:
         temp.write(body)
@@ -109,7 +110,6 @@ def clear(update, context):
     if update.message.chat_id in namespaces:
         del namespaces[update.message.chat_id]
     send("Cleared locals.", bot, update)
-
 
 eval_handler = CommandHandler(BotCommands.EvalCommand, evaluate, filters=CustomFilters.owner_filter)
 exec_handler = CommandHandler(BotCommands.ExecCommand, execute, filters=CustomFilters.owner_filter)

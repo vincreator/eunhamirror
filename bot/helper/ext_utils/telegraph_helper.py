@@ -69,10 +69,17 @@ class TelegraphHelper:
                     nxt_page += 1
             self.edit_page(
                 path = path[prev_page],
-                title = 'Mirror-leech-bot Torrent Search',
+                title = 'Jmdkh-mltb Torrent Search',
                 content=content
             )
         return
+    
+    def revoke_access_token(self):
+        LOGGER.info('Revoking telegraph access token...')
+        try:
+            return self.telegraph.revoke_access_token()
+        except Exception as e:
+            LOGGER.error(f'Failed Revoking telegraph access token due to : {e}')
 
 
-telegraph=TelegraphHelper('Mirror-Leech-Telegram-Bot', 'https://github.com/anasty17/mirror-leech-telegram-bot')
+telegraph=TelegraphHelper('Jmdkh-mltb', 'https://github.com/junedkh/jmdkh-mltb')

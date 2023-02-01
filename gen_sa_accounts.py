@@ -54,7 +54,7 @@ def _get_projects(service):
 
 # Default batch callback handler
 def _def_batch_resp(id, resp, exception):
-    if exception is not None:
+    if exception:
         if str(exception).startswith('<HttpError 429'):
             sleep(sleep_time / 100)
         else:
@@ -64,7 +64,7 @@ def _def_batch_resp(id, resp, exception):
 # Project Creation Batch Handler
 def _pc_resp(id, resp, exception):
     global project_create_ops
-    if exception is not None:
+    if exception:
         print(str(exception))
     else:
         for i in resp.values():
@@ -111,7 +111,7 @@ def _list_sas(iam, project):
 # Create Keys Batch Handler
 def _batch_keys_resp(id, resp, exception):
     global current_key_dump
-    if exception is not None:
+    if exception:
         current_key_dump = None
         sleep(sleep_time / 100)
     elif current_key_dump is None:
@@ -333,7 +333,7 @@ if __name__ == '__main__':
         services=args.services,
         download_keys=args.download_keys
     )
-    if resp is not None:
+    if resp:
         if args.list_projects:
             if resp:
                 print('Projects (%d):' % len(resp))

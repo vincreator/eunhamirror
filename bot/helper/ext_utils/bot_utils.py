@@ -1,13 +1,17 @@
-from re import findall as re_findall, match as re_match
-from threading import Thread, Event
-from time import time
-from math import ceil
 from html import escape
-from psutil import virtual_memory, cpu_percent, disk_usage
-from requests import head as rhead
+from math import ceil
+from re import findall, match
+from threading import Event, Thread
+from time import time
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
-from bot import download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, user_data, config_dict
+from psutil import cpu_percent, disk_usage, virtual_memory
+from requests import request
+
+from bot import (BUTTON_NAMES, BUTTON_URLS, CATEGORY_NAMES, DOWNLOAD_DIR,
+                 botStartTime, config_dict, download_dict, download_dict_lock,
+                 user_data)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -32,6 +36,7 @@ class MirrorStatus:
     STATUS_SPLITTING = "Split"
     STATUS_CHECKING = "CheckUp"
     STATUS_SEEDING = "Seed"
+    STATUS_CONVERTING = "Convert"
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
@@ -72,15 +77,21 @@ def getDownloadByGid(gid):
                 return dl
     return None
 
-def getAllDownload(req_status: str):
+def getAllDownload(req_status: str, user_id: int = None, onece: bool = True):
+    dls = []
     with download_dict_lock:
         for dl in list(download_dict.values()):
+            if user_id and user_id != dl.message.from_user.id:
+                continue
             status = dl.status()
             if req_status in ['all', status]:
-                return dl
-    return None
+                if onece:
+                    return dl
+                else:
+                    dls.append(dl)
+    return None if onece else dls
 
-def bt_selection_buttons(id_: str):
+def bt_selection_buttons(id_: str, isCanCncl: bool = True):
     gid = id_[:12] if len(id_) > 20 else id_
     pincode = ""
     for n in id_:
@@ -90,13 +101,14 @@ def bt_selection_buttons(id_: str):
             break
 
     buttons = ButtonMaker()
-    BASE_URL = config_dict['BASE_URL']
     if config_dict['WEB_PINCODE']:
-        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
+        buttons.buildbutton("Select Files", f"{config_dict['BASE_URL']}/app/files/{id_}")
         buttons.sbutton("Pincode", f"btsel pin {gid} {pincode}")
     else:
-        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
+        buttons.buildbutton("Select Files", f"{config_dict['BASE_URL']}/app/files/{id_}?pin_code={pincode}")
     buttons.sbutton("Done Selecting", f"btsel done {gid} {id_}")
+    if isCanCncl:
+        buttons.sbutton("Cancel", f"btsel rm {gid} {id_}")
     return buttons.build_menu(2)
 
 def get_progress_bar_string(status):
@@ -112,35 +124,46 @@ def get_progress_bar_string(status):
 def get_readable_message():
     with download_dict_lock:
         msg = ""
-        if STATUS_LIMIT := config_dict['STATUS_LIMIT']:
+        STATUS_LIMIT = config_dict['STATUS_LIMIT']
+        if STATUS_LIMIT:
             tasks = len(download_dict)
             globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
             if PAGE_NO > PAGES and PAGES != 0:
                 globals()['COUNT'] -= STATUS_LIMIT
                 globals()['PAGE_NO'] -= 1
         for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
-            msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
-            msg += f"<code>{escape(str(download.name()))}</code>"
-            if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
+            msg += f"<b>{download.status()}</b>: <code>{escape(str(download.name()))}</code>"
+            if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_CONVERTING]:
                 msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
-                msg += f"\n<b>Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
-                msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
+                msg += f"\n<b>Processed</b>: {get_readable_file_size(download.processed_bytes())} of {download.size()}"
+                msg += f"\n<b>Speed</b>: {download.speed()} | <b>ETA</b>: {download.eta()}"
                 if hasattr(download, 'seeders_num'):
                     try:
-                        msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
+                        msg += f"\n<b>Seeders</b>: {download.seeders_num()} | <b>Leechers</b>: {download.leechers_num()}"
                     except:
                         pass
             elif download.status() == MirrorStatus.STATUS_SEEDING:
-                msg += f"\n<b>Size: </b>{download.size()}"
-                msg += f"\n<b>Speed: </b>{download.upload_speed()}"
-                msg += f" | <b>Uploaded: </b>{download.uploaded_bytes()}"
-                msg += f"\n<b>Ratio: </b>{download.ratio()}"
-                msg += f" | <b>Time: </b>{download.seeding_time()}"
+                msg += f"\n<b>Size</b>: {download.size()}"
+                msg += f"\n<b>Speed</b>: {download.upload_speed()}"
+                msg += f" | <b>Uploaded</b>: {download.uploaded_bytes()}"
+                msg += f"\n<b>Ratio</b>: {download.ratio()}"
+                msg += f" | <b>Time</b>: {download.seeding_time()}"
             else:
-                msg += f"\n<b>Size: </b>{download.size()}"
-            msg += f"\n<code>/{BotCommands.CancelMirror} {download.gid()}</code>"
+                msg += f"\n<b>Size</b>: {download.size()}"
+            msg += f"\n<b>Source</b>: <a href='{download.message.link}'>{download.source}</a>"
+            msg += f"\n<b>Elapsed</b>: {get_readable_time(time() - download.message.date.timestamp())}"
+            if hasattr(download, 'playList'):
+                try:
+                    if playlist:=download.playList():
+                        msg += f"\n<b>Playlist</b>: {playlist}"
+                except:
+                    pass
+            msg += f"\n<b>Engine</b>: {download.engine}"
+            msg += f"\n<b>Upload</b>: {download.mode()}"
+            if download.status() != MirrorStatus.STATUS_CONVERTING:
+                msg += f"\n<b>Stop</b>: <code>/{BotCommands.CancelMirror} {download.gid()}</code>"
             msg += "\n\n"
-            if index == STATUS_LIMIT:
+            if STATUS_LIMIT and index == STATUS_LIMIT:
                 break
         if len(msg) == 0:
             return None, None
@@ -165,18 +188,38 @@ def get_readable_message():
                     up_speed += float(spd.split('K')[0]) * 1024
                 elif 'M' in spd:
                     up_speed += float(spd.split('M')[0]) * 1048576
-        bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
-        bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botStartTime)}"
-        bmsg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
+        bmsg = f"<b>CPU</b>: {cpu_percent()}% | <b>FREE</b>: {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
+        bmsg += f"\n<b>RAM</b>: {virtual_memory().percent}% | <b>UPTIME</b>: {get_readable_time(time() - botStartTime)}"
+        bmsg += f"\n<b>DL</b>: {get_readable_file_size(dl_speed)}/s | <b>UL</b>: {get_readable_file_size(up_speed)}/s"
         if STATUS_LIMIT and tasks > STATUS_LIMIT:
-            msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
-            buttons = ButtonMaker()
-            buttons.sbutton("<<", "status pre")
-            buttons.sbutton(">>", "status nex")
-            buttons.sbutton("♻️", "status ref")
-            button = buttons.build_menu(3)
-            return msg + bmsg, button
+            return _get_readable_message_btns(msg, bmsg)
         return msg + bmsg, None
+
+
+def _get_readable_message_btns(msg, bmsg):
+    buttons = ButtonMaker()
+    buttons.sbutton("<<", "status pre")
+    buttons.sbutton(f"{PAGE_NO}/{PAGES} ♻️", "status ref")
+    buttons.sbutton(">>", "status nex")
+    button = buttons.build_menu(3)
+    return msg + bmsg, button
+
+def get_category_btns(time_out, msg_id, c_index):
+    text = '<b>Select the category where you want to upload</b>'
+    text += f'\n<b>Upload</b>: to Drive in {CATEGORY_NAMES[c_index]} folder'
+    text += f'<u>\n\nYou have {get_readable_time(time_out)} to select the mode</u>'
+    button = ButtonMaker()
+    for i, _name in enumerate(CATEGORY_NAMES):
+        button.sbutton(f'{_name}{" ✅" if _name == CATEGORY_NAMES[c_index] else ""}', f'change scat {msg_id} {i}')
+    button.sbutton('Skip', f"change cancel {msg_id}", 'footer')
+    button.sbutton(f'Done ({get_readable_time(time_out)})', f'change done {msg_id}', 'footer')
+    return text, button.build_menu(3)
+
+def extra_btns(buttons):
+    if BUTTON_NAMES and BUTTON_URLS:
+        for btn_name, btn_url in zip(BUTTON_NAMES, BUTTON_URLS):
+            buttons.buildbutton(btn_name, btn_url)
+    return buttons
 
 def turn(data):
     STATUS_LIMIT = config_dict['STATUS_LIMIT']
@@ -201,6 +244,10 @@ def turn(data):
     except:
         return False
 
+def check_user_tasks(user_id, maxtask):
+    if tasks:= getAllDownload(MirrorStatus.STATUS_DOWNLOADING, user_id, False):
+        return len(tasks) >= maxtask
+
 def get_readable_time(seconds: int) -> str:
     result = ''
     (days, remainder) = divmod(seconds, 86400)
@@ -220,17 +267,22 @@ def get_readable_time(seconds: int) -> str:
     return result
 
 def is_url(url: str):
-    url = re_findall(URL_REGEX, url)
+    url = findall(URL_REGEX, url)
     return bool(url)
 
 def is_gdrive_link(url: str):
-    return "drive.google.com" in url
+    return "drive.google.com" in urlparse(url).netloc
 
 def is_Sharerlink(url: str):
-    return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))
+    if 'gdtot' in url:
+        regex = r'(https?:\/\/.+\.gdtot\..+\/file\/\d+)'
+    else:
+        regex = r'(https?:\/\/(\S+)\..+\/file\/\S+)'
+    return bool(match(regex, url))
 
 def is_mega_link(url: str):
-    return "mega.nz" in url or "mega.co.nz" in url
+    url_ = urlparse(url)
+    return any(x in url_.netloc for x in ['mega.nz', 'mega.co.nz'])
 
 def get_mega_link_type(url: str):
     if "folder" in url:
@@ -242,7 +294,7 @@ def get_mega_link_type(url: str):
     return "file"
 
 def is_magnet(url: str):
-    magnet = re_findall(MAGNET_REGEX, url)
+    magnet = findall(MAGNET_REGEX, url)
     return bool(magnet)
 
 def new_thread(fn):
@@ -259,7 +311,7 @@ def new_thread(fn):
 
 def get_content_type(link: str) -> str:
     try:
-        res = rhead(link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
+        res = request('HEAD', link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
         content_type = res.headers.get('content-type')
     except:
         try:
@@ -275,3 +327,35 @@ def update_user_ldata(id_, key, value):
         user_data[id_][key] = value
     else:
         user_data[id_] = {key: value}
+
+def set_commands(bot):
+    if config_dict['SET_COMMANDS']:
+        bot.set_my_commands([
+        (f'{BotCommands.MirrorCommand[0]}', f'or /{BotCommands.MirrorCommand[1]} Mirror'),
+        (f'{BotCommands.LeechCommand[0]}', f'or /{BotCommands.LeechCommand[1]} Leech'),
+        (f'{BotCommands.ZipMirrorCommand[0]}', f'or /{BotCommands.ZipMirrorCommand[1]} Mirror and upload as zip'),
+        (f'{BotCommands.ZipLeechCommand[0]}', f'or /{BotCommands.ZipLeechCommand[1]} Leech and upload as zip'),
+        (f'{BotCommands.UnzipMirrorCommand[0]}', f'or /{BotCommands.UnzipMirrorCommand[1]} Mirror and extract files'),
+        (f'{BotCommands.UnzipLeechCommand[0]}', f'or /{BotCommands.UnzipLeechCommand[1]} Leech and extract files'),
+        (f'{BotCommands.QbMirrorCommand[0]}', f'or /{BotCommands.QbMirrorCommand[1]} Mirror torrent using qBittorrent'),
+        (f'{BotCommands.QbLeechCommand[0]}', f'or /{BotCommands.QbLeechCommand[1]} Leech torrent using qBittorrent'),
+        (f'{BotCommands.QbZipMirrorCommand[0]}', f'or /{BotCommands.QbZipMirrorCommand[1]} Mirror torrent and upload as zip using qb'),
+        (f'{BotCommands.QbZipLeechCommand[0]}', f'or /{BotCommands.QbZipLeechCommand[1]} Leech torrent and upload as zip using qb'),
+        (f'{BotCommands.QbUnzipMirrorCommand[0]}', f'or /{BotCommands.QbUnzipMirrorCommand[1]} Mirror torrent and extract files using qb'),
+        (f'{BotCommands.QbUnzipLeechCommand[0]}', f'or /{BotCommands.QbUnzipLeechCommand[1]} Leech torrent and extract using qb'),
+        (f'{BotCommands.YtdlCommand[0]}', f'or /{BotCommands.YtdlCommand[1]} Mirror yt-dlp supported link'),
+        (f'{BotCommands.YtdlLeechCommand[0]}', f'or /{BotCommands.YtdlLeechCommand[1]} Leech through yt-dlp supported link'),
+        (f'{BotCommands.YtdlZipCommand[0]}', f'or /{BotCommands.YtdlZipCommand[1]} Mirror yt-dlp supported link as zip'),
+        (f'{BotCommands.YtdlZipLeechCommand[0]}', f'or /{BotCommands.YtdlZipLeechCommand[1]} Leech yt-dlp support link as zip'),
+        (f'{BotCommands.CloneCommand}', 'Copy file/folder to Drive'),
+        (f'{BotCommands.StatusCommand[0]}', f'or /{BotCommands.StatusCommand[1]} Get mirror status message'),
+        (f'{BotCommands.StatsCommand}', 'Check bot stats'),
+        (f'{BotCommands.BtSelectCommand}', 'Select files to download only torrents'),
+        (f'{BotCommands.CategorySelect}', 'Select category to upload only mirror'),
+        (f'{BotCommands.CancelMirror}', 'Cancel a Task'),
+        (f'{BotCommands.CancelAllCommand[0]}', f'Cancel all tasks which added by you or {BotCommands.CancelAllCommand[1]} to in bots.'),
+        (f'{BotCommands.ListCommand}', 'Search in Drive'),
+        (f'{BotCommands.SearchCommand}', 'Search in Torrent'),
+        (f'{BotCommands.UserSetCommand}', 'Users settings'),
+        (f'{BotCommands.HelpCommand}', 'Get detailed help'),
+            ])
