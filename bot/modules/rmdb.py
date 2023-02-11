@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler
 from bot import DATABASE_URL, config_dict, dispatcher
 from bot.helper.ext_utils.bot_utils import is_magnet, is_url, new_thread
 from bot.helper.ext_utils.db_handler import DbManger
-from bot.helper.ext_utils.eunha_utils import extract_link
+from bot.helper.ext_utils.work_utils import extract_link
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage

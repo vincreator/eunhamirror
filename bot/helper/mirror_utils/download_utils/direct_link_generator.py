@@ -14,6 +14,7 @@ from math import pow, floor
 from re import findall, match, search, sub, search
 from time import sleep
 from urllib.parse import quote, unquote, urlparse
+from uuid import uuid4
 
 from bs4 import BeautifulSoup
 from cfscrape import create_scraper
@@ -53,6 +54,9 @@ st_list = ['streamtape.com', 'streamtape.xyz',
         'streamadblockplus.com', 'shavetape.cash']
 
 tb_list = ['terabox.com', 'mirrobox.com', '4funbox.com', 'nephobox.com']
+
+anonfilesBaseSites = ['anonfiles.com','hotfile.io','bayfiles.com','megaupload.nz','letsupload.cc','filechan.org'
+                    'myfile.is','vshare.is','rapidshare.nu','lolabits.se','openload.cc','share-online.is','upvid.cc']
 
 def direct_link_generator(link: str):
     """ direct links generator """
@@ -113,15 +117,14 @@ def direct_link_generator(link: str):
         return streamtape(link)
     elif any(x in link for x in tb_list):
         return terabox(link)
-    else:
-        if is_Sharerlink(link):
-            if 'gdtot' in domain:
-                return gdtot(link)
-            elif 'filepress' in domain:
-                return filepress(link)
-            else:
-                return sharer_scraper(link)
-        raise DirectDownloadLinkException(f'No Direct link function found for {link}')
+    elif is_Sharerlink(link):
+        if 'gdtot' in domain:
+            return gdtot(link)
+        elif 'filepress' in domain:
+            return filepress(link)
+        else:
+            return sharer_scraper(link)
+    raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
 def zippy_share(url: str) -> str:
     base_url = search('http.+.zippyshare.com', url).group()
@@ -272,17 +275,15 @@ def anonfiles(url: str) -> str:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
 
 def letsupload(url: str) -> str:
-    """ Letsupload direct link generator
-    Based on https://github.com/zevtyardt/lk21
-    """
+    cget = create_scraper().request
     try:
-        link = findall(r'\bhttps?://.*letsupload\.io\S+', url)[0]
-    except IndexError:
-        raise DirectDownloadLinkException("No Letsupload links found\n")
-    try:
-        return Bypass().bypass_url(link)
+        res = cget("POST", url)
     except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    if direct_link := findall(r"(https?://letsupload\.io\/.+?)\'", res.text):
+        return direct_link[0]
+    else:
+        raise DirectDownloadLinkException('ERROR: Direct Link not found')
 
 def fembed(link: str) -> str:
     """ Fembed direct link generator
@@ -563,7 +564,8 @@ def sharer_scraper(url):
     try:
         url = cget('GET', url).url
         raw = urlparse(url)
-        res = cget('GET', url)
+        header = {"useragent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/7.0.548.0 Safari/534.10"}
+        res = cget('GET', url, headers=header)
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
     key = findall('"key",\s+"(.*?)"', res.text)
@@ -572,20 +574,23 @@ def sharer_scraper(url):
     key = key[0]
     if not etree.HTML(res.content).xpath("//button[@id='drc']"):
         raise DirectDownloadLinkException("ERROR: This link don't have direct download button")
+    boundary = uuid4()
     headers = {
-        'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryi3pOrWU7hGYfwwL4',
+        'Content-Type': f'multipart/form-data; boundary=----WebKitFormBoundary{boundary}',
         'x-token': raw.hostname,
+        'useragent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/7.0.548.0 Safari/534.10'
     }
-    data = '------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="action"\r\n\r\ndirect\r\n' \
-        f'------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="key"\r\n\r\n{key}\r\n' \
-        '------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="action_token"\r\n\r\n\r\n' \
-        '------WebKitFormBoundaryi3pOrWU7hGYfwwL4--\r\n'
+
+    data = f'------WebKitFormBoundary{boundary}\r\nContent-Disposition: form-data; name="action"\r\n\r\ndirect\r\n' \
+        f'------WebKitFormBoundary{boundary}\r\nContent-Disposition: form-data; name="key"\r\n\r\n{key}\r\n' \
+        f'------WebKitFormBoundary{boundary}\r\nContent-Disposition: form-data; name="action_token"\r\n\r\n\r\n' \
+        f'------WebKitFormBoundary{boundary}--\r\n'
     try:
         res = cget("POST", url, cookies=res.cookies, headers=headers, data=data).json()
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
     if "url" not in res:
-        raise DirectDownloadLinkException('ERROR: Drive Link not found')
+        raise DirectDownloadLinkException('ERROR: Drive Link not found, Try in your broswer')
     if "drive.google.com" in res["url"]:
         return res["url"]
     try:
@@ -595,7 +600,7 @@ def sharer_scraper(url):
     if (drive_link := etree.HTML(res.content).xpath("//a[contains(@class,'btn')]/@href")) and "drive.google.com" in drive_link[0]:
         return drive_link[0]
     else:
-        raise DirectDownloadLinkException('ERROR: Drive Link not found')
+        raise DirectDownloadLinkException('ERROR: Drive Link not found, Try in your broswer')
 
 def wetransfer(url):
     cget = create_scraper().request

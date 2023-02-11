@@ -11,7 +11,6 @@ from bot import (config_dict, download_dict, download_dict_lock, non_queued_dl,
                  non_queued_up, queue_dict_lock, queued_dl)
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.ext_utils.fs_utils import check_storage_threshold
-from bot.helper.mirror_utils.status_utils.convert_status import ConvertStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.mirror_utils.status_utils.yt_dlp_download_status import YtDlpDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -27,15 +26,12 @@ class MyLogger:
     def debug(self, msg):
         # Hack to fix changing extension
         if not self.obj.is_playlist:
-            match = re_search(r'.Merger..Merging formats into..(.*?).$', msg) or \
-                    re_search(r'.ExtractAudio..Destination..(.*?)$', msg)
-            if match:
+            if match := re_search(r'.Merger..Merging formats into..(.*?).$', msg) or \
+                        re_search(r'.ExtractAudio..Destination..(.*?)$', msg):
                 LOGGER.info(msg)
                 newname = match.group(1)
                 newname = newname.rsplit("/", 1)[-1]
                 self.obj.name = newname
-                with download_dict_lock:
-                    download_dict[self.obj.listener.uid] = ConvertStatus(self.obj.name, self.obj.size, self.obj.gid, self.obj.listener)
 
     @staticmethod
     def warning(msg):
@@ -57,10 +53,8 @@ class YoutubeDLHelper:
         self.__downloaded_bytes = 0
         self.__download_speed = 0
         self.__eta = '-'
-        self.listener = listener
-        self.gid = ""
-        self.playlist_index = 0
-        self.playlist_count = 0
+        self.__listener = listener
+        self.__gid = ""
         self.__is_cancelled = False
         self.__downloading = False
         self.__resource_lock = RLock()
@@ -116,10 +110,6 @@ class YoutubeDLHelper:
                     chunk_size = downloadedBytes - self._last_downloaded
                     self._last_downloaded = downloadedBytes
                     self.__downloaded_bytes += chunk_size
-                    try:
-                        self.playlist_index = d['info_dict']['playlist_index']
-                    except:
-                        pass
                 else:
                     if d.get('total_bytes'):
                         self.__size = d['total_bytes']
@@ -134,20 +124,20 @@ class YoutubeDLHelper:
 
     def __onDownloadStart(self, from_queue):
         with download_dict_lock:
-            download_dict[self.listener.uid] = YtDlpDownloadStatus(self, self.listener, self.gid)
+            download_dict[self.__listener.uid] = YtDlpDownloadStatus(self, self.__listener, self.__gid)
         if not from_queue:
-            self.listener.onDownloadStart()
-            sendStatusMessage(self.listener.message, self.listener.bot)
+            self.__listener.onDownloadStart()
+            sendStatusMessage(self.__listener.message, self.__listener.bot)
             LOGGER.info(f'Download with YT_DLP: {self.name}')
         else:
             LOGGER.info(f'Start Queued Download with YT_DLP: {self.name}')
 
     def __onDownloadComplete(self):
-        self.listener.onDownloadComplete()
+        self.__listener.onDownloadComplete()
 
     def __onDownloadError(self, error, button=None):
         self.__is_cancelled = True
-        self.listener.onDownloadError(error, button)
+        self.__listener.onDownloadError(error, button)
 
     def extractMetaData(self, link, name, args, get_info=False):
         if args:
@@ -167,8 +157,6 @@ class YoutubeDLHelper:
                 if get_info:
                     raise e
                 return self.__onDownloadError(str(e))
-        if self.is_playlist:
-            self.playlist_count = result.get('playlist_count', 0)
         if 'entries' in result:
             for entry in result['entries']:
                 if not entry:
@@ -178,7 +166,7 @@ class YoutubeDLHelper:
                 elif 'filesize' in entry:
                     self.__size += entry['filesize']
                 if not name:
-                    outtmpl_ ='%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
+                    outtmpl_ = '%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
                     self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
                 else:
                     self.name = name
@@ -209,10 +197,7 @@ class YoutubeDLHelper:
                     return
             if self.__is_cancelled:
                 raise ValueError
-            try:
-                self.__onDownloadComplete()
-            except Exception as e:
-                return self.__onDownloadError(str(e))
+            self.__onDownloadComplete()
         except ValueError:
             self.__onDownloadError("Download Stopped by User!")
 
@@ -220,7 +205,7 @@ class YoutubeDLHelper:
         if playlist:
             self.opts['ignoreerrors'] = True
             self.is_playlist = True
-        self.gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
+        self.__gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         self.__onDownloadStart(from_queue)
         if qual.startswith('ba/b-'):
             mp3_info = qual.split('-')
@@ -239,10 +224,10 @@ class YoutubeDLHelper:
             folder_name = self.name.rsplit('.', 1)[0]
             self.opts['outtmpl'] = f"{dpath}/{folder_name}/{self.name}"
             self.name = folder_name
-        if config_dict['STOP_DUPLICATE'] and self.name != 'NA' and not self.listener.isLeech:
+        if config_dict['STOP_DUPLICATE'] and self.name != 'NA' and not self.__listener.isLeech:
             LOGGER.info('Checking File/Folder if already in Drive...')
             sname = self.name
-            if self.listener.isZip:
+            if self.__listener.isZip:
                 sname = f"{self.name}.zip"
             if sname:
                 smsg, button = GoogleDriveHelper().drive_list(name, True)
@@ -252,22 +237,17 @@ class YoutubeDLHelper:
         limit_exceeded = ''
         if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
             limit = STORAGE_THRESHOLD * 1024**3
-            acpt = check_storage_threshold(self.__size, limit, self.listener.isZip)
+            acpt = check_storage_threshold(self.__size, limit, self.__listener.isZip)
             if not acpt:
                 limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
                 limit_exceeded += f'\nYour File/Folder size is {get_readable_file_size(self.__size)}'
-        if not limit_exceeded and (MAX_PLAYLIST:= config_dict['MAX_PLAYLIST']) \
-                            and (self.is_playlist and self.listener.isLeech):
-            if self.playlist_count > MAX_PLAYLIST:
-                limit_exceeded = f'Leech Playlist limit is {MAX_PLAYLIST}\n'
-                limit_exceeded += f'Your Playlist is {self.playlist_count}'
         if not limit_exceeded and (YTDLP_LIMIT:= config_dict['YTDLP_LIMIT']):
             limit = YTDLP_LIMIT * 1024**3
             if self.__size > limit:
                 limit_exceeded = f'Ytldp limit is {get_readable_file_size(limit)}\n'
                 limit_exceeded+= f'Your {"Playlist" if self.is_playlist else "Video"} size\n'
                 limit_exceeded+= f'is {get_readable_file_size(self.__size)}'
-        if not limit_exceeded and (LEECH_LIMIT:= config_dict['LEECH_LIMIT']) and self.listener.isLeech:
+        if not limit_exceeded and (LEECH_LIMIT:= config_dict['LEECH_LIMIT']) and self.__listener.isLeech:
             limit = LEECH_LIMIT * 1024**3
             if self.__size > limit:
                 limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}\n'
@@ -284,16 +264,16 @@ class YoutubeDLHelper:
                 up = len(non_queued_up)
                 if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
                     added_to_queue = True
-                    queued_dl[self.listener.uid] = ['yt', link, dpath, name, qual, playlist, args, self.listener]
+                    queued_dl[self.__listener.uid] = ['yt', link, path, name, qual, playlist, args, self.__listener]
             if added_to_queue:
                 LOGGER.info(f"Added to Queue/Download: {self.name}")
                 with download_dict_lock:
-                    download_dict[self.listener.uid] = QueueStatus(self.name, self.__size, self.gid, self.listener, 'Dl')
-                self.listener.onDownloadStart()
-                sendStatusMessage(self.listener.message, self.listener.bot)
+                    download_dict[self.__listener.uid] = QueueStatus(self.name, self.__size, self.__gid, self.__listener, 'Dl')
+                self.__listener.onDownloadStart()
+                sendStatusMessage(self.__listener.message, self.__listener.bot)
                 return
         with queue_dict_lock:
-            non_queued_dl.add(self.listener.uid)
+            non_queued_dl.add(self.__listener.uid)
         self.__download(link, dpath)
 
     def cancel_download(self):

@@ -7,13 +7,11 @@ from dotenv import load_dotenv
 from telegram.ext import (CallbackQueryHandler, CommandHandler, Filters,
                           MessageHandler)
 
-from bot import (BUTTON_NAMES, BUTTON_URLS, CATEGORY_IDS, CATEGORY_INDEXES,
-                 CATEGORY_NAMES, DATABASE_URL, DRIVES_IDS, DRIVES_NAMES,
-                 GLOBAL_EXTENSION_FILTER, INDEX_URLS, IS_PREMIUM_USER, LOGGER,
-                 MAX_SPLIT_SIZE, SHORTENER_APIS, SHORTENERES, Interval, aria2,
-                 aria2_options, aria2c_global, config_dict, dispatcher,
-                 download_dict, get_client, qbit_options,
-                 status_reply_dict_lock, user_data)
+from bot import (DATABASE_URL, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER,
+                 LOGGER, MAX_SPLIT_SIZE, SHORTENER_APIS, SHORTENERES, Interval,
+                 aria2, aria2_options, aria2c_global, categories, config_dict,
+                 dispatcher, download_dict, extra_buttons, get_client,
+                 list_drives, qbit_options, status_reply_dict_lock, user_data)
 from bot.helper.ext_utils.bot_utils import (get_readable_file_size, new_thread,
                                             set_commands, setInterval)
 from bot.helper.ext_utils.db_handler import DbManger
@@ -298,12 +296,8 @@ def load_config():
     LEECH_LIMIT = environ.get('LEECH_LIMIT', '')
     LEECH_LIMIT = '' if len(LEECH_LIMIT) == 0 else float(LEECH_LIMIT)
 
-    MAX_PLAYLIST = environ.get('MAX_PLAYLIST', '')
-    MAX_PLAYLIST = '' if len(MAX_PLAYLIST) == 0 else int(MAX_PLAYLIST)
-
-
-    ENABLE_CHAT_RESTRICT = environ.get('ENABLE_CHAT_RESTRICT', '')
-    ENABLE_CHAT_RESTRICT = ENABLE_CHAT_RESTRICT.lower() == 'true'
+    ENABLE_RATE_LIMIT = environ.get('ENABLE_RATE_LIMIT', '')
+    ENABLE_RATE_LIMIT = ENABLE_RATE_LIMIT.lower() == 'true'
 
     ENABLE_MESSAGE_FILTER = environ.get('ENABLE_MESSAGE_FILTER', '')
     ENABLE_MESSAGE_FILTER = ENABLE_MESSAGE_FILTER.lower() == 'true'
@@ -333,46 +327,75 @@ def load_config():
     if len(FSUB_IDS) == 0:
         FSUB_IDS = ''
 
-    DRIVES_NAMES.clear()
-    DRIVES_IDS.clear()
-    INDEX_URLS.clear()
-    CATEGORY_NAMES.clear()
-    CATEGORY_IDS.clear()
-    CATEGORY_INDEXES.clear()
+    list_drives.clear()
+    categories.clear()
 
     if GDRIVE_ID:
-        DRIVES_NAMES.append("Main")
-        DRIVES_IDS.append(GDRIVE_ID)
-        INDEX_URLS.append(INDEX_URL)
-        CATEGORY_NAMES.append("Root")
-        CATEGORY_IDS.append(GDRIVE_ID)
-        CATEGORY_INDEXES.append(INDEX_URL)
+        list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": INDEX_URL}
+        categories['Root'] = {"drive_id": GDRIVE_ID, "index_link": INDEX_URL}
 
     if path.exists('list_drives.txt'):
         with open('list_drives.txt', 'r+') as f:
             lines = f.readlines()
             for line in lines:
                 temp = line.strip().split()
-                DRIVES_IDS.append(temp[1])
-                DRIVES_NAMES.append(temp[0].replace("_", " "))
+                name = temp[0].replace("_", " ")
+                if name.casefold() == "Main":
+                    name = "Main Custom"
+                tempdict = {}
+                tempdict['drive_id'] = temp[1]
                 if len(temp) > 2:
-                    INDEX_URLS.append(temp[2])
+                    tempdict['index_link'] = temp[2]
                 else:
-                    INDEX_URLS.append('')
-
-
+                    tempdict['index_link'] = ''
+                list_drives[name] = tempdict
 
     if path.exists('categories.txt'):
         with open('categories.txt', 'r+') as f:
             lines = f.readlines()
             for line in lines:
                 temp = line.strip().split()
-                CATEGORY_IDS.append(temp[1])
-                CATEGORY_NAMES.append(temp[0].replace("_", " "))
+                name = temp[0].replace("_", " ")
+                if name.casefold() == "Root":
+                    name = "Root Custom"
+                tempdict = {}
+                tempdict['drive_id'] = temp[1]
                 if len(temp) > 2:
-                    CATEGORY_INDEXES.append(temp[2])
+                    tempdict['index_link'] = temp[2]
                 else:
-                    CATEGORY_INDEXES.append('')
+                    tempdict['index_link'] = ''
+                categories[name] = tempdict
+
+    extra_buttons.clear()
+    if path.exists('buttons.txt'):
+        with open('buttons.txt', 'r+') as f:
+            lines = f.readlines()
+            for line in lines:
+                temp = line.strip().split()
+                if len(extra_buttons.keys()) == 4:
+                    break
+                if len(temp) == 2:
+                    extra_buttons[temp[0].replace("_", " ")] = temp[1]
+
+    SHORTENERES.clear()
+    SHORTENER_APIS.clear()
+    if path.exists('shorteners.txt'):
+        with open('shorteners.txt', 'r+') as f:
+            lines = f.readlines()
+            for line in lines:
+                temp = line.strip().split()
+                if len(temp) == 2:
+                    SHORTENERES.append(temp[0])
+                    SHORTENER_APIS.append(temp[1])
+
+    if path.exists('accounts.zip'):
+        if path.exists('accounts'):
+            run(["rm", "-rf", "accounts"])
+        run(["unzip", "-q", "-o", "accounts.zip", "-W", "accounts/*.json"])
+        run(["chmod", "-R", "777", "accounts"])
+        remove('accounts.zip')
+    if not path.exists('accounts'):
+        USE_SERVICE_ACCOUNTS = False
 
     config_dict.update({'AS_DOCUMENT': AS_DOCUMENT,
                    'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
@@ -420,8 +443,8 @@ def load_config():
                    'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
                    'UPSTREAM_REPO': UPSTREAM_REPO,
                    'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
-                   'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                    'TERABOX_COOKIES': TERABOX_COOKIES,
+                   'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                    'USER_SESSION_STRING': USER_SESSION_STRING,
                    'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                    'VIEW_LINK': VIEW_LINK,
@@ -435,8 +458,7 @@ def load_config():
                    'CLONE_LIMIT': CLONE_LIMIT,
                    'MEGA_LIMIT': MEGA_LIMIT,
                    'LEECH_LIMIT': LEECH_LIMIT,
-                   'MAX_PLAYLIST': MAX_PLAYLIST,
-                   'ENABLE_CHAT_RESTRICT': ENABLE_CHAT_RESTRICT,
+                   'ENABLE_RATE_LIMIT': ENABLE_RATE_LIMIT,
                    'ENABLE_MESSAGE_FILTER': ENABLE_MESSAGE_FILTER,
                    'STOP_DUPLICATE_TASKS': STOP_DUPLICATE_TASKS,
                    'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
@@ -453,6 +475,8 @@ def load_config():
 def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
+        if DATABASE_URL:
+            buttons.sbutton('Fetch Config', "botset fetch")
         buttons.sbutton('Config Variables', "botset var")
         buttons.sbutton('Private Files', "botset private")
         buttons.sbutton('Qbit Settings', "botset qbit")
@@ -579,23 +603,12 @@ def edit_variable(update, context, omsg, key):
         for x in fx:
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
     elif key == 'GDRIVE_ID':
-        if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':
-            DRIVES_IDS[0] = value
-        else:
-            DRIVES_IDS.insert(0, value)
-        if CATEGORY_NAMES and CATEGORY_NAMES[0] == 'Root':
-            CATEGORY_IDS[0] = value
-        else:
-            CATEGORY_IDS.insert(0, value)
+        list_drives['Main'] = {"drive_id": value, "index_link": config_dict['INDEX_URL']}
+        list_drives['Root'] = {"drive_id": value, "index_link": config_dict['INDEX_URL']}
     elif key == 'INDEX_URL':
-        if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':
-            INDEX_URLS[0] = value
-        else:
-            INDEX_URLS.insert(0, value)
-        if CATEGORY_NAMES and CATEGORY_NAMES[0] == 'Root':
-            CATEGORY_INDEXES[0] = value
-        else:
-            CATEGORY_INDEXES.insert(0, value)
+        if GDRIVE_ID:=config_dict['GDRIVE_ID']:
+            list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": value}
+            categories['Root'] = {"drive_id": GDRIVE_ID, "index_link": value}
     elif key == 'DM_MODE':
         value = value.lower() if value.lower() in ['leech', 'mirror', 'all'] else ''
     elif key not in ['SEARCH_LIMIT', 'STATUS_LIMIT'] and key.endswith(('_THRESHOLD', '_LIMIT')):
@@ -677,24 +690,15 @@ def update_private_file(update, context, omsg):
             run(["cp", ".netrc", "/root/.netrc"])
             run(["chmod", "600", ".netrc"])
         elif file_name == 'buttons.txt':
-            BUTTON_NAMES.clear()
-            BUTTON_URLS.clear()
+            extra_buttons.clear()
         elif file_name == 'categories.txt':
-            CATEGORY_NAMES.clear()
-            CATEGORY_IDS.clear()
-            CATEGORY_INDEXES.clear()
+            categories.clear()            
             if GDRIVE_ID:= config_dict['GDRIVE_ID']:
-                CATEGORY_NAMES.append('Root')
-                CATEGORY_IDS.append(GDRIVE_ID)
-                CATEGORY_INDEXES.append(config_dict['INDEX_URL'])
+                categories['Root'] = {"drive_id": GDRIVE_ID, "index_link": config_dict['INDEX_URL']}
         elif file_name == 'list_drives.txt':
-            DRIVES_IDS.clear()
-            DRIVES_NAMES.clear()
-            INDEX_URLS.clear()
+            list_drives.clear()
             if GDRIVE_ID:= config_dict['GDRIVE_ID']:
-                DRIVES_NAMES.append('Main')
-                DRIVES_IDS.append(GDRIVE_ID)
-                INDEX_URLS.append(config_dict['INDEX_URL'])
+                list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": config_dict['INDEX_URL']}
         elif file_name == 'shorteners.txt':
             SHORTENERES.clear()
             SHORTENER_APIS.clear()
@@ -706,44 +710,44 @@ def update_private_file(update, context, omsg):
         if file_name == 'accounts.zip':
             if path.exists('accounts'):
                 run(["rm", "-rf", "accounts"])
-            run(["unzip", "-q", "-o", "accounts.zip", "-x", "accounts/emails.txt"])
+            run(["unzip", "-q", "-o", "accounts.zip", "-W", "accounts/*.json"])
             run(["chmod", "-R", "777", "accounts"])
         elif file_name == 'list_drives.txt':
-            DRIVES_IDS.clear()
-            DRIVES_NAMES.clear()
-            INDEX_URLS.clear()
+            list_drives.clear()
             if GDRIVE_ID:= config_dict['GDRIVE_ID']:
-                DRIVES_NAMES.append("Main")
-                DRIVES_IDS.append(GDRIVE_ID)
-                INDEX_URLS.append(config_dict['INDEX_URL'])
+                list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": config_dict['INDEX_URL']}
             with open('list_drives.txt', 'r+') as f:
                 lines = f.readlines()
                 for line in lines:
                     temp = line.strip().split()
-                    DRIVES_IDS.append(temp[1])
-                    DRIVES_NAMES.append(temp[0].replace("_", " "))
+                    name = temp[0].replace("_", " ")
+                    if name.casefold() == "Main":
+                        name = "Main Custom"
+                    tempdict = {}
+                    tempdict['drive_id'] = temp[1]
                     if len(temp) > 2:
-                        INDEX_URLS.append(temp[2])
+                        tempdict['index_link'] = temp[2]
                     else:
-                        INDEX_URLS.append('')
+                        tempdict['index_link'] = ''
+                    list_drives[name] = tempdict
         elif file_name == 'categories.txt':
-            CATEGORY_IDS.clear()
-            CATEGORY_NAMES.clear()
-            CATEGORY_INDEXES.clear()
+            categories.clear()
             if GDRIVE_ID:= config_dict['GDRIVE_ID']:
-                CATEGORY_NAMES.append("Root")
-                CATEGORY_IDS.append(GDRIVE_ID)
-                CATEGORY_INDEXES.append(config_dict['INDEX_URL'])
+                list_drives['Root'] = {"drive_id": GDRIVE_ID, "index_link": config_dict['INDEX_URL']}
             with open('categories.txt', 'r+') as f:
                 lines = f.readlines()
                 for line in lines:
                     temp = line.strip().split()
-                    CATEGORY_IDS.append(temp[1])
-                    CATEGORY_NAMES.append(temp[0].replace("_", " "))
+                    name = temp[0].replace("_", " ")
+                    if name.casefold() == "Root":
+                        name = "Root Custom"
+                    tempdict = {}
+                    tempdict['drive_id'] = temp[1]
                     if len(temp) > 2:
-                        CATEGORY_INDEXES.append(temp[2])
+                        tempdict['index_link'] = temp[2]
                     else:
-                        CATEGORY_INDEXES.append('')
+                        tempdict['index_link'] = ''
+                    categories[name] = tempdict
         elif file_name == 'shorteners.txt':
             SHORTENERES.clear()
             SHORTENER_APIS.clear()
@@ -755,22 +759,21 @@ def update_private_file(update, context, omsg):
                         SHORTENERES.append(temp[0])
                         SHORTENER_APIS.append(temp[1])
         elif file_name == 'buttons.txt':
-            BUTTON_NAMES.clear()
-            BUTTON_URLS.clear()
+            extra_buttons.clear()
             with open('buttons.txt', 'r+') as f:
                 lines = f.readlines()
                 for line in lines:
                     temp = line.strip().split()
-                    if len(BUTTON_NAMES) == 4:
+                    if len(extra_buttons.keys()) == 4:
                         break
                     if len(temp) == 2:
-                        BUTTON_NAMES.append(temp[0].replace("_", " "))
-                        BUTTON_URLS.append(temp[1])
+                        extra_buttons[temp[0].replace("_", " ")] = temp[1]
         elif file_name in ['.netrc', 'netrc']:
             if file_name == 'netrc':
                 rename('netrc', '.netrc')
                 file_name = '.netrc'
             run(["cp", ".netrc", "/root/.netrc"])
+            run(["chmod", "600", "/root/.netrc"])
             run(["chmod", "600", ".netrc"])
         elif file_name == 'config.env':
             load_dotenv('config.env', override=True)
@@ -803,6 +806,13 @@ def edit_bot_settings(update, context):
         handler_dict[message.chat.id] = False
         message.delete()
         message.reply_to_message.delete()
+    elif data[1] == 'fetch':
+        query.answer()
+        handler_dict[message.chat.id] = False
+        message.delete()
+        message.reply_to_message.delete()
+        DbManger().load_configs()
+        load_config()
     elif data[1] == 'back':
         query.answer()
         handler_dict[message.chat.id] = False
@@ -846,19 +856,15 @@ def edit_bot_settings(update, context):
             run(["pkill", "-9", "-f", "gunicorn"])
             Popen("gunicorn web.wserver:app --bind 0.0.0.0:80", shell=True)
         elif data[2] == 'GDRIVE_ID':
-            if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':
-                DRIVES_NAMES.pop(0)
-                DRIVES_IDS.pop(0)
-                INDEX_URLS.pop(0)
-            if CATEGORY_NAMES and CATEGORY_NAMES[0] == 'Root':
-                CATEGORY_NAMES.pop(0)
-                CATEGORY_IDS.pop(0)
-                CATEGORY_INDEXES.pop(0)
+            if 'Main' in list_drives:
+                del list_drives['Main']
+            if 'Root' in categories:
+                del categories['Root']
         elif data[2] == 'INDEX_URL':
-            if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':
-                INDEX_URLS[0] = ''
-            if CATEGORY_NAMES and CATEGORY_NAMES[0] == 'Root':
-                CATEGORY_INDEXES[0] = ''
+            if (GDRIVE_ID:= config_dict['GDRIVE_ID']) and 'Main' in list_drives:
+                list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": ''}
+            if (GDRIVE_ID:= config_dict['GDRIVE_ID']) and 'Root' in categories:
+                categories['Root'] = {"drive_id": GDRIVE_ID, "index_link": ''}
         elif data[2] == 'INCOMPLETE_TASK_NOTIFIER' and DATABASE_URL:
             DbManger().trunc_table('tasks')
         elif data[2] == 'STOP_DUPLICATE_TASKS' and DATABASE_URL:

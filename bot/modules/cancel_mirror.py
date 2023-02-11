@@ -6,13 +6,14 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 from bot import dispatcher, download_dict, download_dict_lock
 from bot.helper.ext_utils.bot_utils import (MirrorStatus, getAllDownload,
                                             getDownloadByGid)
+from bot.helper.ext_utils.rate_limiter import ratelimiter
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       editMessage, sendMessage)
 
-
+@ratelimiter
 def cancel_mirror(update, context):
     message = update.message
     if message.from_user.id in [1087968824, 136817688]:
@@ -40,10 +41,6 @@ def cancel_mirror(update, context):
         sendMessage("This task is not for you!", context.bot, message)
         return
 
-    if dl.status() == MirrorStatus.STATUS_CONVERTING:
-        sendMessage("Converting... Can't cancel this task!", context.bot, message)
-        return
-
     dl.download().cancel_download()
 
 cancel_listener = {}
@@ -58,9 +55,6 @@ def cancel_all(status, info):
         cant_cancel = 0
         for dl in dls:
             try:
-                if dl.status() == MirrorStatus.STATUS_CONVERTING:
-                    cant_cancel += 1
-                    continue
                 dl.download().cancel_download()
                 canceled += 1
                 sleep(1)
@@ -82,6 +76,7 @@ def cancel_all(status, info):
     else:
         editMessage(f"{user_id} Don't have any active task!", msg)
 
+@ratelimiter
 def cancell_all_buttons(update, context):
     message = update.message
     with download_dict_lock:

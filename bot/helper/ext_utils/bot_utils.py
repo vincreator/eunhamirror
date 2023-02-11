@@ -9,9 +9,8 @@ from urllib.request import urlopen
 from psutil import cpu_percent, disk_usage, virtual_memory
 from requests import request
 
-from bot import (BUTTON_NAMES, BUTTON_URLS, CATEGORY_NAMES, DOWNLOAD_DIR,
-                 botStartTime, config_dict, download_dict, download_dict_lock,
-                 user_data)
+from bot import (DOWNLOAD_DIR, botStartTime, config_dict, download_dict,
+                 download_dict_lock, extra_buttons, user_data)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -36,7 +35,6 @@ class MirrorStatus:
     STATUS_SPLITTING = "Split"
     STATUS_CHECKING = "CheckUp"
     STATUS_SEEDING = "Seed"
-    STATUS_CONVERTING = "Convert"
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
@@ -133,7 +131,7 @@ def get_readable_message():
                 globals()['PAGE_NO'] -= 1
         for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
             msg += f"<b>{download.status()}</b>: <code>{escape(str(download.name()))}</code>"
-            if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_CONVERTING]:
+            if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
                 msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
                 msg += f"\n<b>Processed</b>: {get_readable_file_size(download.processed_bytes())} of {download.size()}"
                 msg += f"\n<b>Speed</b>: {download.speed()} | <b>ETA</b>: {download.eta()}"
@@ -150,18 +148,11 @@ def get_readable_message():
                 msg += f" | <b>Time</b>: {download.seeding_time()}"
             else:
                 msg += f"\n<b>Size</b>: {download.size()}"
-            msg += f"\n<b>Source</b>: <a href='{download.message.link}'>{download.source}</a>"
-            msg += f"\n<b>Elapsed</b>: {get_readable_time(time() - download.message.date.timestamp())}"
-            if hasattr(download, 'playList'):
-                try:
-                    if playlist:=download.playList():
-                        msg += f"\n<b>Playlist</b>: {playlist}"
-                except:
-                    pass
+            msg += f"\n<b>Source</b>: {download.source}"
+            msg += f"\n<b>Elapsed</b>: {get_readable_time(time() - download.startTime)}"
             msg += f"\n<b>Engine</b>: {download.engine}"
-            msg += f"\n<b>Upload</b>: {download.mode()}"
-            if download.status() != MirrorStatus.STATUS_CONVERTING:
-                msg += f"\n<b>Stop</b>: <code>/{BotCommands.CancelMirror} {download.gid()}</code>"
+            msg += f"\n<b>Upload</b>: {download.mode}"
+            msg += f"\n<b>Stop</b>: <code>/{BotCommands.CancelMirror} {download.gid()}</code>"
             msg += "\n\n"
             if STATUS_LIMIT and index == STATUS_LIMIT:
                 break
@@ -204,20 +195,10 @@ def _get_readable_message_btns(msg, bmsg):
     button = buttons.build_menu(3)
     return msg + bmsg, button
 
-def get_category_btns(time_out, msg_id, c_index):
-    text = '<b>Select the category where you want to upload</b>'
-    text += f'\n<b>Upload</b>: to Drive in {CATEGORY_NAMES[c_index]} folder'
-    text += f'<u>\n\nYou have {get_readable_time(time_out)} to select the mode</u>'
-    button = ButtonMaker()
-    for i, _name in enumerate(CATEGORY_NAMES):
-        button.sbutton(f'{_name}{" ✅" if _name == CATEGORY_NAMES[c_index] else ""}', f'change scat {msg_id} {i}')
-    button.sbutton('Skip', f"change cancel {msg_id}", 'footer')
-    button.sbutton(f'Done ({get_readable_time(time_out)})', f'change done {msg_id}', 'footer')
-    return text, button.build_menu(3)
 
 def extra_btns(buttons):
-    if BUTTON_NAMES and BUTTON_URLS:
-        for btn_name, btn_url in zip(BUTTON_NAMES, BUTTON_URLS):
+    if extra_buttons:
+        for btn_name, btn_url in extra_buttons.items():
             buttons.buildbutton(btn_name, btn_url)
     return buttons
 
