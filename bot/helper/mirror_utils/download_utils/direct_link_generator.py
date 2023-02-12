@@ -8,6 +8,7 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
+from http.cookiejar import MozillaCookieJar
 from base64 import standard_b64encode
 from json import loads
 from math import pow, floor
@@ -674,3 +675,113 @@ def linkbox(url):
     name = quote(itemInfo["name"])
     raw = itemInfo['url'].split("/", 3)[-1]
     return f'https://wdl.nuplink.net/{raw}&filename={name}'
+
+def try2link(url):
+    client = create_scraper()
+    url = url[:-1] if url[-1] == "/" else url
+    params = (("d", int(time.time()) + (60 * 4)),)
+    r = client.get(url, params=params, headers={"Referer": "https://mobi2c.com/"})
+    soup = BeautifulSoup(r.text, "html.parser")
+    inputs = soup.find_all("input")
+    data = {input.get("name"): input.get("value") for input in inputs}
+    sleep(7)
+    headers = {
+        "Host": "try2link.net",
+        "X-Requested-With": "XMLHttpRequest",
+        "Origin": "https://try2link.net",
+        "Referer": url,
+    }
+    bypassed_url = client.post(
+        "https://try2link.net/links/go", headers=headers, data=data
+    )
+    return bypassed_url.json()["url"]
+
+
+def rock(url: str) -> str:
+    client = create_scraper(allow_brotli=False)
+    DOMAIN = "https://rl.techysuccess.com"
+    url = url[:-1] if url[-1] == "/" else url
+    code = url.split("/")[-1]
+    final_url = f"{DOMAIN}/{code}"
+    ref = "https://disheye.com/"
+    h = {"referer": ref}
+    resp = client.get(final_url, headers=h)
+    soup = BeautifulSoup(resp.content, "html.parser")
+    try:
+        inputs = soup.find(id="go-link").find_all(name="input")
+    except:
+        return "Incorrect Link"
+    data = {input.get("name"): input.get("value") for input in inputs}
+    h = {"x-requested-with": "XMLHttpRequest"}
+    sleep(10)
+    r = client.post(f"{DOMAIN}/links/go", data=data, headers=h)
+    try:
+        return r.json()["url"]
+    except:
+        return "Something went wrong :("
+
+
+def ez4(url):
+    client = create_scraper(allow_brotli=False)
+    DOMAIN = "https://ez4short.com"
+    ref = "https://techmody.io/"
+    h = {"referer": ref}
+    resp = client.get(url, headers=h)
+    soup = BeautifulSoup(resp.content, "html.parser")
+    inputs = soup.find_all("input")
+    data = {input.get("name"): input.get("value") for input in inputs}
+    h = {"x-requested-with": "XMLHttpRequest"}
+    sleep(8)
+    r = client.post(f"{DOMAIN}/links/go", data=data, headers=h)
+    try:
+        return r.json()["url"]
+    except:
+        return "Something went wrong :("
+
+
+ANCHOR_URL = "https://www.google.com/recaptcha/api2/anchor?ar=1&k=6Lcr1ncUAAAAAH3cghg6cOTPGARa8adOf-y9zv2x&co=aHR0cHM6Ly9vdW8uaW86NDQz&hl=en&v=1B_yv3CBEV10KtI2HJ6eEXhJ&size=invisible&cb=4xnsug1vufyr"
+
+
+def RecaptchaV3(ANCHOR_URL):
+    url_base = "https://www.google.com/recaptcha/"
+    post_data = "v={}&reason=q&c={}&k={}&co={}"
+    client = Session()
+    client.headers.update({"content-type": "application/x-www-form-urlencoded"})
+    matches = findall("([api2|enterprise]+)\/anchor\?(.*)", ANCHOR_URL)[0]
+    url_base += matches[0] + "/"
+    params = matches[1]
+    res = client.get(url_base + "anchor", params=params)
+    token = findall(r'"recaptcha-token" value="(.*?)"', res.text)[0]
+    params = dict(pair.split("=") for pair in params.split("&"))
+    post_data = post_data.format(params["v"], token, params["k"], params["co"])
+    res = client.post(url_base + "reload", params=f'k={params["k"]}', data=post_data)
+    answer = findall(r'"rresp","(.*?)"', res.text)[0]
+    return answer
+
+
+def ouo(url: str) -> str:
+    client = Session()
+    tempurl = url.replace("ouo.press", "ouo.io")
+    p = urlparse(tempurl)
+    id = tempurl.split("/")[-1]
+    res = client.get(tempurl)
+    next_url = f"{p.scheme}://{p.hostname}/go/{id}"
+    for _ in range(2):
+        if res.headers.get("Location"):
+            break
+        bs4 = BeautifulSoup(res.content, "html.parser")
+        inputs = bs4.form.findAll("input", {"name": re_compile(r"token$")})
+        data = {input.get("name"): input.get("value") for input in inputs}
+        ans = RecaptchaV3(ANCHOR_URL)
+        data["x-token"] = ans
+        h = {"content-type": "application/x-www-form-urlencoded"}
+        res = client.post(next_url, data=data, headers=h, allow_redirects=False)
+        next_url = f"{p.scheme}://{p.hostname}/xreallcygo/{id}"
+    return res.headers.get("Location")
+
+
+def is_fembed(url: str):
+    test_link = Bypass().bypass_fembed(url)
+    if test_link:
+        return True
+    return False
