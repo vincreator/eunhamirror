@@ -108,6 +108,14 @@ def direct_link_generator(link: str):
         return linkbox(link)
     elif 'shrdsk' in domain:
         return shrdsk(link)
+    elif "rocklinks.net" in link:
+        return rock(link)
+    elif "try2link.com" in link:
+        return try2link(link)
+    elif "ez4short.com" in link:
+        return ez4(link)
+    elif "ouo.io" in link or "ouo.press" in link:
+        return ouo(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
     elif any(x in link for x in fm_list):
@@ -778,7 +786,6 @@ def ouo(url: str) -> str:
         res = client.post(next_url, data=data, headers=h, allow_redirects=False)
         next_url = f"{p.scheme}://{p.hostname}/xreallcygo/{id}"
     return res.headers.get("Location")
-
 
 def is_fembed(url: str):
     test_link = Bypass().bypass_fembed(url)
