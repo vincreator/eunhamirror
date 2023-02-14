@@ -12,7 +12,7 @@ from http.cookiejar import MozillaCookieJar
 from base64 import standard_b64encode
 from json import loads
 from math import pow, floor
-from re import findall, match, search, sub, search
+from re import findall, match, search, sub, search, compile 
 from time import sleep
 from urllib.parse import quote, unquote, urlparse
 from uuid import uuid4
@@ -778,7 +778,7 @@ def ouo(url: str) -> str:
         if res.headers.get("Location"):
             break
         bs4 = BeautifulSoup(res.content, "html.parser")
-        inputs = bs4.form.findAll("input", {"name": re_compile(r"token$")})
+        inputs = bs4.form.findAll("input", {"name": compile(r"token$")})
         data = {input.get("name"): input.get("value") for input in inputs}
         ans = RecaptchaV3(ANCHOR_URL)
         data["x-token"] = ans
